@@ -242,10 +242,11 @@
     </Compile>
     <Compile Include="_Siemplify\Helpers\GraphService.cs" />
     <Compile Include="_Siemplify\Helpers\ServiceHelper.cs" />
+    <Compile Include="_Siemplify\IExternalChannelProvider.cs" />
     <Compile Include="_Siemplify\Models\ChannelMessage.cs" />
     <Compile Include="_Siemplify\Models\ChannelUser.cs" />
-    <Compile Include="_Siemplify\IExternalChannelProvider.cs" />
-    <Compile Include="_Siemplify\MsTeamsChannelProvider.cs" />
+    <Compile Include="_Siemplify\IExternalChannelProviderAsync.cs" />
+    <Compile Include="_Siemplify\MsTeamsChannelProviderAsync.cs" />
     <Compile Include="_Siemplify\Helpers\HtmlHelpers.cs" />
     <Compile Include="Models\TeamsApp.cs" />
     <Compile Include="Models\Clone.cs" />
@@ -256,7 +257,6 @@
     <Compile Include="Models\Message.cs" />
     <Compile Include="Models\PostMessage.cs" />
     <Compile Include="Models\ResultsItem.cs" />
-    <Compile Include="Models\ResultsViewModel.cs" />
     <Compile Include="Models\RootMessage.cs" />
     <Compile Include="Models\Team.cs" />
     <Compile Include="Models\TeamFunSettings.cs" />
@@ -267,6 +267,7 @@
     <Compile Include="SessionTokenCache\SessionTokenCache.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Views\MyExtensionMethods.cs" />
+    <Compile Include="_Siemplify\TestOutput\ResultsViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />

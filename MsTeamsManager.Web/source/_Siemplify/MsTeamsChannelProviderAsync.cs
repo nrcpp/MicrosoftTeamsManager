@@ -13,14 +13,14 @@ using Siemplify.Common.ExternalChannels.DataModel;
 
 namespace Siemplify.Common.ExternalChannels
 {
-    public class MsTeamsChannelProvider : IExternalChannelProvider
+    public class MsTeamsChannelProviderAsync : IExternalChannelProviderAsync
     {
         readonly GraphService graphService = new GraphService();
         
         public string CurrentTeamId { get; set; }
         public FormOutput LastResult { get; private set; }
 
-        public MsTeamsChannelProvider()
+        public MsTeamsChannelProviderAsync()
         {
 
         }
@@ -81,7 +81,7 @@ namespace Siemplify.Common.ExternalChannels
         #region IExternalChannelProvider implementation
 
         // Provider name
-        public string Provider => nameof(MsTeamsChannelProvider);
+        public string Provider => nameof(MsTeamsChannelProviderAsync);
 
 
         // See also: AuthProvider\Startup.Auth.cs               
@@ -120,23 +120,75 @@ namespace Siemplify.Common.ExternalChannels
 
         public async Task<bool> CreateChannel(string channelName, List<string> channelUsers)
         {
-            await CreateChannelInternal(channelName, channelDescription: "");
-            
-            foreach (var user in channelUsers)
-                await AddUserToChannel(channelName, user);
+            var response = await CreateChannelInternal(channelName, channelDescription: "");
 
-            return true;
+            var channel = response?.Channels?.FirstOrDefault(ch => ch.displayName == channelName);
+            if (channel == null)
+            {
+                Log($"{channelName} - channel was not created");
+                return false;
+            }
+
+            bool result = true;
+            foreach (var user in channelUsers)
+                result &= (await AddUserToChannelInternal(channel.id, channelName, user)) != null;
+
+            return result;
+        }
+
+        ChannelUser FromResponseUser(User user)
+        {
+            return new ChannelUser()
+            {
+                UserId = user.id,
+
+                // TODO: add fields to User
+                FullName = "<TODO fullname>", // user.fullname
+                Picture = "<TODO picture>",
+            };
+        }
+
+        private async Task<ChannelUser> AddUserToChannelInternal(string id, string channelName, string userName)
+        {
+            ChannelUser result = null;
+
+            return result;
         }
 
 
+        private async Task<Channel []> GetChannels()
+        {            
+            var response = await WithExceptionHandlingAsync(
+                async token =>
+                {
+                    var channels = (await graphService.GetChannels(token, CurrentTeamId)).ToArray();
+                    return new FormOutput()
+                    {
+                        Channels = channels,
+                        ShowChannelOutput = true
+                    };
+                }
+            );
+
+            return response.Channels;
+        }
+
+        private async Task<Channel> GetChannelByName(string name) =>        
+            (await GetChannels())?.FirstOrDefault(ch => ch.displayName == name);
+
         public async Task<ChannelUser> AddUserToChannel(string channelName, string userName)
         {
-            var result = new ChannelUser()
+            var channel = await GetChannelByName(channelName);
+            if (channel == null)
             {
+                Log($"{channelName} - channel not found");
+                return null;
+            }
 
-            };
+            // add user to channel call
+            var response = await AddUserToChannelInternal(channel.id, channelName, userName);
 
-            return result;
+            response.
         }
 
         public async Task CloseChannel(string channelName)
@@ -174,7 +226,20 @@ namespace Siemplify.Common.ExternalChannels
 
         public async Task SendMessage(string channelName, string message)
         {
-            throw new NotImplementedException();
+            var channelId = (await GetChannelByName(channelName))?.id;
+            if (channelId == null)
+                throw new ArgumentException("No channel found - " + channelName);
+                
+            LastResult = await WithExceptionHandlingAsync(
+                async token =>
+                {
+                    await graphService.PostMessage(token, CurrentTeamId, channelId, message);
+                    return new FormOutput()
+                    {
+                        SuccessMessage = "Done",
+                    };
+                }
+            );
         }
 
         #endregion

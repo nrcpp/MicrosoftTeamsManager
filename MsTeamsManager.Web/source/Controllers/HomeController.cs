@@ -25,7 +25,7 @@ namespace GraphAPI.Web.Controllers
         public static bool hasAppId = ServiceHelper.AppId != "Enter AppId of your application";
 
 
-        MsTeamsChannelProvider _channelProvider = new MsTeamsChannelProvider();
+        MsTeamsChannelProviderAsync _channelProvider = new MsTeamsChannelProviderAsync();
 
         readonly GraphService graphService ;
 
@@ -197,27 +197,12 @@ namespace GraphAPI.Web.Controllers
             _channelProvider.CurrentTeamId = data.SelectedTeam;
             await _channelProvider.CreateChannel(data.NameInput, new List<string>() { });
             return View("Graph", _channelProvider.LastResult);
-
-#if false
-            return await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    await graphService.CreateChannel(token,
-                        data.SelectedTeam, data.NameInput, data.DescriptionInput);
-                    var channels = (await graphService.GetChannels(token, data.SelectedTeam)).ToArray();
-                    return new FormOutput()
-                    {
-                        Channels = channels,
-                        ShowChannelOutput = true
-                    };
-                }
-                );
-#endif
         }
+
 
         [Authorize]
         public async Task<ActionResult> PostMessageForm()
-        {
+        {            
             return await WithExceptionHandling(
                 token =>
                 {
@@ -235,6 +220,13 @@ namespace GraphAPI.Web.Controllers
         [Authorize]
         public async Task<ActionResult> PostMessageAction(FormOutput data)
         {
+            _channelProvider.CurrentTeamId = data.SelectedTeam;
+            string channelName = data.SelectedChannel;
+
+            await _channelProvider.SendMessage("channel name from id", data.MessageBodyInput);
+            return View("Graph", _channelProvider.LastResult);
+
+#if false
             return await WithExceptionHandlingAsync(
                 async token =>
                 {
@@ -246,6 +238,7 @@ namespace GraphAPI.Web.Controllers
                     };
                 }
                 );
+#endif
         }
 
 
