@@ -18,7 +18,7 @@ namespace Siemplify.Common.ExternalChannels
         readonly GraphService graphService = new GraphService();
         
         public string CurrentTeamId { get; set; }
-        
+        public FormOutput LastResult { get; private set; }
 
         public MsTeamsChannelProvider()
         {
@@ -29,54 +29,43 @@ namespace Siemplify.Common.ExternalChannels
 
         public static void Log(string msg, [CallerMemberName] string caller = null) =>
             Console.WriteLine($"[{caller}]: {msg}");
-        
 
-        private async Task<ActionResult> WithExceptionHandling(Func<string, FormOutput> f, [CallerMemberName] string callerName = "")
-        {
-            return await WithExceptionHandlingAsync(
-                async s => f(s),
-                callerName);
-        }
 
-        private async Task<ActionResult> WithExceptionHandlingAsync(Func<string, Task<FormOutput>> f, [CallerMemberName] string callerName = "")
+        private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> f, [CallerMemberName] string callerName = "")
         {
+            FormOutput output = new FormOutput();
+
             try
-            {
+            {                
                 // Configuration settings have to be set
                 if (ConfigurationManager.AppSettings["ida:AppId"] == null
                     || ConfigurationManager.AppSettings["ida:AppSecret"] == null)
                 {
-                    //return RedirectToAction("Index", "Error", new
-                    //{
-                    //    message = "You need to put your appid and appsecret in Web.config.secrets. See README.md for details."
-                    //});
-                    return null;
+                    Log("You need to put your appid and appsecret in Web.config.secrets. See README.md for details.");                    
+                    return output;
                 }
 
                 // Get an access token.
                 string accessToken = await AuthProvider.Instance.GetUserAccessTokenAsync();
                 graphService.accessToken = accessToken;
-                FormOutput output = await f(accessToken);
+                output = f(accessToken);
 
                 output.Action = callerName.Replace("Form", "Action");
 
-                output.UserUpn = await graphService.GetMyId(accessToken); // todo: cache
+                output.UserUpn = await graphService.GetMyId(accessToken); 
 
                 if (output.ShowTeamDropdown)
                     output.Teams = (await graphService.GetMyTeams(accessToken)).ToArray();
+
                 if (output.ShowGroupDropdown)
-                    output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();
-
-                //results.Items = await graphService.GetMyTeams(accessToken, Convert.ToString(Resource.Prop_ID));
-                //return View("Graph", output);                
+                    output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();                
             }
-            catch (Exception )
+            catch (Exception ex)
             {
-                //if (e.Message == Resource.Error_AuthChallengeNeeded) return new EmptyResult();
-                //return RedirectToAction("Index", "Error", new { message = Resource.Error_Message + Request.RawUrl + ": " + e.Message });
+                Log(ex.Message);             
             }
 
-            return null;
+            return output;
         }
 
         #endregion
@@ -88,24 +77,27 @@ namespace Siemplify.Common.ExternalChannels
         public string Provider => nameof(MsTeamsChannelProvider);
 
 
-        // See also: App_Start\Startup.Auth.cs
-        public void Connect()
+        // See also: AuthProvider\Startup.Auth.cs               
+        public async Task Connect()
         {
-            var result = WithExceptionHandling(
-                token => new FormOutput()
+            LastResult = await WithExceptionHandling(
+                func => new FormOutput()
+                {
+                    ShowTeamDropdown = true,
+                }
             );
 
-            Log(result.Result.ToString());
+            CurrentTeamId = LastResult.Teams?.FirstOrDefault()?.id;     // select first team on connection
         }
+        
 
-
-        private bool CreateChannelInternal(string channelName, string channelDescription)
+        private async Task<bool> CreateChannelInternal(string channelName, string channelDescription)
         {            
-            string token = AuthProvider.Instance.GetUserAccessTokenAsync().Result;
+            string token = await AuthProvider.Instance.GetUserAccessTokenAsync();
 
             try
             {
-                graphService.CreateChannel(token, CurrentTeamId, channelName, channelDescription).RunSynchronously();
+                await graphService.CreateChannel(token, CurrentTeamId, channelName, channelDescription);
             }
             catch (Exception ex)
             {
@@ -114,37 +106,22 @@ namespace Siemplify.Common.ExternalChannels
             }
 
             return true;
-
-#if false
-            await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    await graphService.CreateChannel(token,
-                        data.SelectedTeam, data.NameInput, data.DescriptionInput);
-                    var channels = (await graphService.GetChannels(token, data.SelectedTeam)).ToArray();
-                    return new FormOutput()
-                    {
-                        Channels = channels,
-                        ShowChannelOutput = true
-                    };
-                }
-                );
-#endif
         }
 
-        public bool CreateChannel(string channelName, List<string> channelUsers)
+
+        public async Task<bool> CreateChannel(string channelName, List<string> channelUsers)
         {
-            if (!CreateChannelInternal(channelName, channelDescription: ""))
+            if ( !(await CreateChannelInternal(channelName, channelDescription: "")) )
                 return false;
 
             foreach (var user in channelUsers)
-                AddUserToChannel(channelName, user);
+                await AddUserToChannel(channelName, user);
 
             return true;
         }
 
 
-        public ChannelUser AddUserToChannel(string channelName, string userName)
+        public async Task<ChannelUser> AddUserToChannel(string channelName, string userName)
         {
             var result = new ChannelUser()
             {
@@ -154,43 +131,44 @@ namespace Siemplify.Common.ExternalChannels
             return result;
         }
 
-        public void CloseChannel(string channelName)
+        public async Task CloseChannel(string channelName)
         {
             
         }
 
 
 
-        public List<ChannelUser> GetAllUsers(string userPrefix = "")
+        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "")
         {
             throw new NotImplementedException();
         }
 
-        public List<ChannelUser> GetChannelUsers(string channelName)
+        public async Task<List<ChannelUser>> GetChannelUsers(string channelName)
         {
             throw new NotImplementedException();
         }
 
-        public List<ChannelMessage> GetMessages(string channelName, DateTime? from)
+
+        public async Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from)
         {
             throw new NotImplementedException();
         }
 
-        public List<ChannelMessage> GetMessages(string channelName)
+        public async Task<List<ChannelMessage>> GetMessages(string channelName)
         {
             throw new NotImplementedException();
         }
 
-        public void RemoveUserFromChannel(string channelName, string userName)
+        public async Task RemoveUserFromChannel(string channelName, string userName)
         {
             throw new NotImplementedException();
         }
 
-        public void SendMessage(string channelName, string message)
+        public async Task SendMessage(string channelName, string message)
         {
             throw new NotImplementedException();
         }
 
-#endregion
+        #endregion
     }
 }

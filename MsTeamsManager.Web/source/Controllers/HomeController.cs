@@ -24,7 +24,7 @@ namespace GraphAPI.Web.Controllers
         public static bool hasAppId = ServiceHelper.AppId != "Enter AppId of your application";
 
 
-        IExternalChannelProvider _channelProvider = new MsTeamsChannelProvider();
+        MsTeamsChannelProvider _channelProvider = new MsTeamsChannelProvider();
 
         readonly GraphService graphService ;
 
@@ -64,6 +64,7 @@ namespace GraphAPI.Web.Controllers
 
                 if (output.ShowTeamDropdown)
                     output.Teams = (await graphService.GetMyTeams(accessToken)).ToArray();
+
                 if (output.ShowGroupDropdown)
                     output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();
 
@@ -277,7 +278,7 @@ namespace GraphAPI.Web.Controllers
 
 
         [Authorize]
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
             //return await WithExceptionHandling(
             //    token =>
@@ -287,10 +288,10 @@ namespace GraphAPI.Web.Controllers
             //        };
             //    }
             //    );
+            
+            await _channelProvider.Connect();
 
-            _channelProvider.Connect();
-
-            return View("Grpah");
+            return View("Graph", _channelProvider.LastResult);
         }
 
 
