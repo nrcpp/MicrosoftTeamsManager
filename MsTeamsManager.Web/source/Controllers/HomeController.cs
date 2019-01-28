@@ -16,6 +16,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Configuration;
 using Siemplify.Common.ExternalChannels;
+using System.Collections.Generic;
 
 namespace GraphAPI.Web.Controllers
 {
@@ -193,6 +194,11 @@ namespace GraphAPI.Web.Controllers
         [Authorize]
         public async Task<ActionResult> PostChannelsAction(FormOutput data)
         {
+            _channelProvider.CurrentTeamId = data.SelectedTeam;
+            await _channelProvider.CreateChannel(data.NameInput, new List<string>() { });
+            return View("Graph", _channelProvider.LastResult);
+
+#if false
             return await WithExceptionHandlingAsync(
                 async token =>
                 {
@@ -206,6 +212,7 @@ namespace GraphAPI.Web.Controllers
                     };
                 }
                 );
+#endif
         }
 
         [Authorize]
@@ -279,16 +286,7 @@ namespace GraphAPI.Web.Controllers
 
         [Authorize]
         public async Task<ActionResult> Index()
-        {
-            //return await WithExceptionHandling(
-            //    token =>
-            //    {
-            //        return new FormOutput()
-            //        {
-            //        };
-            //    }
-            //    );
-            
+        {            
             await _channelProvider.Connect();
 
             return View("Graph", _channelProvider.LastResult);

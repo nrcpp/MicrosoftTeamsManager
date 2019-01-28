@@ -33,6 +33,13 @@ namespace Siemplify.Common.ExternalChannels
 
         private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> f, [CallerMemberName] string callerName = "")
         {
+            return await WithExceptionHandlingAsync(
+                async s => f(s),
+                callerName);
+        }
+
+        private async Task<FormOutput> WithExceptionHandlingAsync(Func<string, Task<FormOutput>> f, [CallerMemberName] string callerName = "")
+        {
             FormOutput output = new FormOutput();
 
             try
@@ -48,7 +55,7 @@ namespace Siemplify.Common.ExternalChannels
                 // Get an access token.
                 string accessToken = await AuthProvider.Instance.GetUserAccessTokenAsync();
                 graphService.accessToken = accessToken;
-                output = f(accessToken);
+                output = await f(accessToken);
 
                 output.Action = callerName.Replace("Form", "Action");
 
@@ -91,29 +98,30 @@ namespace Siemplify.Common.ExternalChannels
         }
         
 
-        private async Task<bool> CreateChannelInternal(string channelName, string channelDescription)
-        {            
-            string token = await AuthProvider.Instance.GetUserAccessTokenAsync();
+        private async Task<FormOutput> CreateChannelInternal(string channelName, string channelDescription)
+        {
+            LastResult = await WithExceptionHandlingAsync(
+                async token =>
+                {
+                    await graphService.CreateChannel(token,
+                        CurrentTeamId, channelName, channelDescription);
+                    var channels = (await graphService.GetChannels(token, CurrentTeamId)).ToArray();
+                    return new FormOutput()
+                    {
+                        Channels = channels,
+                        ShowChannelOutput = true
+                    };
+                }
+            );
 
-            try
-            {
-                await graphService.CreateChannel(token, CurrentTeamId, channelName, channelDescription);
-            }
-            catch (Exception ex)
-            {
-                Log(ex.ToString());
-                return false;
-            }
-
-            return true;
+            return LastResult;
         }
 
 
         public async Task<bool> CreateChannel(string channelName, List<string> channelUsers)
         {
-            if ( !(await CreateChannelInternal(channelName, channelDescription: "")) )
-                return false;
-
+            await CreateChannelInternal(channelName, channelDescription: "");
+            
             foreach (var user in channelUsers)
                 await AddUserToChannel(channelName, user);
 
