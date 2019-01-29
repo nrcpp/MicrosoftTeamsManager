@@ -17,6 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Configuration;
 using Siemplify.Common.ExternalChannels;
 using System.Collections.Generic;
+using Siemplify.Common.ExternalChannels.Utils;
 
 namespace GraphAPI.Web.Controllers
 {
@@ -25,7 +26,7 @@ namespace GraphAPI.Web.Controllers
         public static bool hasAppId = ServiceHelper.AppId != "Enter AppId of your application";
 
 
-        MsTeamsChannelProviderAsync _channelProvider = new MsTeamsChannelProviderAsync();
+        MsTeamsChannelProvider _channelProvider = new MsTeamsChannelProvider();
 
         readonly GraphService graphService ;
 
@@ -133,7 +134,7 @@ namespace GraphAPI.Web.Controllers
         {
             var output = new FormOutput()
             {
-                Users = (await _channelProvider.GetAllUsers()).Select(u => new User()
+                Users = (await _channelProvider.GetAllUsersAsync()).Select(u => new User()
                 {
                     displayName = u.FullName,
                     id = u.UserId
@@ -232,7 +233,7 @@ namespace GraphAPI.Web.Controllers
 
             // Create channel
             // TODO: add users
-            await _channelProvider.CreateChannel(data.NameInput, new List<string>() { });
+            await _channelProvider.CreateChannelAsync(data.NameInput, new List<string>() { });
 
             return View("Graph", _channelProvider.LastResult);
         }
@@ -260,7 +261,7 @@ namespace GraphAPI.Web.Controllers
         {
             _channelProvider.CurrentTeamId = data.SelectedTeam;
             
-            await _channelProvider.SendMessage(data.SelectedChannel, data.MessageBodyInput);
+            await _channelProvider.SendMessageAsync(data.SelectedChannel, data.MessageBodyInput);
             return View("Graph", _channelProvider.LastResult);
         }
 
@@ -303,7 +304,7 @@ namespace GraphAPI.Web.Controllers
         [Authorize]
         public async Task<ActionResult> Index()
         {            
-            await _channelProvider.Connect();
+            await _channelProvider.ConnectAsync();
 
             // Uncomment to test methods
 
@@ -319,7 +320,7 @@ namespace GraphAPI.Web.Controllers
         {
             // #GetMessages
             await _channelProvider.SelectFirstTeam();
-            var messages = await _channelProvider.GetMessages("General");
+            var messages = await _channelProvider.GetMessagesAsync("General");
 
             return View("Graph", new FormOutput()
             {
@@ -328,14 +329,17 @@ namespace GraphAPI.Web.Controllers
             });
         }
 
+        // Example of synchronous call
         [Authorize]
-        public async Task<ActionResult> AddUserTest()
+        public ActionResult AddUserTest()
         {
-            // #GetMessages
-            await _channelProvider.SelectFirstTeam();
+            AsyncHelpers.RunSync(() => _channelProvider.SelectFirstTeam());
+
+            // #GetMessages            
             string testUserName = "Test Two",
                    testTeamName = "MsTeamsManager Test";
-            var user = await _channelProvider.AddUserToChannel(testTeamName, testUserName);
+            var user = _channelProvider.AddUserToChannel(testTeamName, testUserName);
+            //await _channelProvider.AddUserToChannelAsync(testTeamName, testUserName);
 
             return View("Graph", new FormOutput()
             {
@@ -351,7 +355,7 @@ namespace GraphAPI.Web.Controllers
             await _channelProvider.SelectFirstTeam();
             string testUserName = "Test Two",
                    testTeamName = "MsTeamsManager Test";
-            await _channelProvider.RemoveUserFromChannel(testTeamName, testUserName);
+            await _channelProvider.RemoveUserFromChannelAsync(testTeamName, testUserName);
 
             return View("Graph", new FormOutput()
             {

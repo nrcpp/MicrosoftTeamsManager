@@ -247,7 +247,7 @@
     <Compile Include="_Siemplify\Models\ChannelMessage.cs" />
     <Compile Include="_Siemplify\Models\ChannelUser.cs" />
     <Compile Include="_Siemplify\IExternalChannelProviderAsync.cs" />
-    <Compile Include="_Siemplify\MsTeamsChannelProviderAsync.cs" />
+    <Compile Include="_Siemplify\MsTeamsChannelProvider.cs" />
     <Compile Include="_Siemplify\Helpers\HtmlHelpers.cs" />
     <Compile Include="Models\TeamsApp.cs" />
     <Compile Include="Models\Clone.cs" />
@@ -269,6 +269,7 @@
     <Compile Include="Startup.cs" />
     <Compile Include="Views\MyExtensionMethods.cs" />
     <Compile Include="_Siemplify\TestOutput\ResultsViewModel.cs" />
+    <Compile Include="_Siemplify\Utils\AsyncHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />

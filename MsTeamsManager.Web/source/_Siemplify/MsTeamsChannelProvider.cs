@@ -10,21 +10,23 @@ using Microsoft_Teams_Graph_RESTAPIs_Connect.Auth;
 using Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles;
 using Microsoft_Teams_Graph_RESTAPIs_Connect.Models;
 using Siemplify.Common.ExternalChannels.DataModel;
-
+using Siemplify.Common.ExternalChannels.Utils;
 
 namespace Siemplify.Common.ExternalChannels
 {
-    public class MsTeamsChannelProviderAsync : IExternalChannelProviderAsync
+    public class MsTeamsChannelProvider : IExternalChannelProvider, IExternalChannelProviderAsync
     {        
         readonly GraphService graphService = new GraphService();
         private string _token;
 
-        public string CurrentTeamId { get; set; }
+        public string CurrentTeamId { get; set; }       // set team id before any call. Will be set on Connect() to first team.
 
+        public string Token => GetTokenAsync().Result;
 
         public FormOutput LastResult { get; private set; }
 
-        public MsTeamsChannelProviderAsync()
+
+        public MsTeamsChannelProvider()
         {
 
         }
@@ -42,9 +44,7 @@ namespace Siemplify.Common.ExternalChannels
             graphService.accessToken = _token;
             return _token;
         }
-
-        private string Token => GetTokenAsync().Result;
-
+        
 
         private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> call, [CallerMemberName] string callerName = "")
         {
@@ -121,14 +121,14 @@ namespace Siemplify.Common.ExternalChannels
         #endregion
 
 
-        #region IExternalChannelProvider implementation
+        #region IExternalChannelProviderAsync implementation
 
         // Provider name
-        public string Provider => nameof(MsTeamsChannelProviderAsync);
+        public string Provider => nameof(MsTeamsChannelProvider);
 
 
         // See also: AuthProvider\Startup.Auth.cs               
-        public async Task Connect()
+        public async Task ConnectAsync()
         {
             LastResult = await WithExceptionHandling(
                 func => new FormOutput()
@@ -158,7 +158,7 @@ namespace Siemplify.Common.ExternalChannels
         }
 
 
-        public async Task<bool> CreateChannel(string channelName, List<string> channelUsers)
+        public async Task<bool> CreateChannelAsync(string channelName, List<string> channelUsers)
         {
             var response = await CreateChannelInternal(channelName, channelDescription: "");
 
@@ -191,7 +191,7 @@ namespace Siemplify.Common.ExternalChannels
 
         // users
         public async Task<ChannelUser> GetUserByFullName(string name) =>
-            (await GetAllUsers()).FirstOrDefault(u => u.FullName == name);
+            (await GetAllUsersAsync()).FirstOrDefault(u => u.FullName == name);
 
 
 
@@ -228,17 +228,17 @@ namespace Siemplify.Common.ExternalChannels
 
 
         // NOTE: Add user to team. Every user in team could attend any channel        
-        public async Task<ChannelUser> AddUserToChannel(string teamName, string userName) =>
+        public async Task<ChannelUser> AddUserToChannelAsync(string teamName, string userName) =>
             await AddOrRemoveUserInTeam(teamName, userName, add: true);
 
 
         // NOTE: No API to remove user from channel. Instead remove user from team.
         // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
-        public async Task RemoveUserFromChannel(string teamName, string userName) =>
+        public async Task RemoveUserFromChannelAsync(string teamName, string userName) =>
             await AddOrRemoveUserInTeam(teamName, userName, add: false);
         
 
-        public async Task CloseChannel(string channelName)
+        public async Task CloseChannelAsync(string channelName)
         {
             var channel = await GetChannelByName(channelName);
             if (channel == null)
@@ -256,7 +256,7 @@ namespace Siemplify.Common.ExternalChannels
 
 
 
-        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "")
+        public async Task<List<ChannelUser>> GetAllUsersAsync(string userPrefix = "")
         {
             var users = await graphService.GetUsers();
             if (!string.IsNullOrEmpty(userPrefix))
@@ -267,11 +267,11 @@ namespace Siemplify.Common.ExternalChannels
 
         // All users in Team could participate in any channel
         // See: https://docs.microsoft.com/en-us/microsoftteams/teams-channels-overview
-        public async Task<List<ChannelUser>> GetChannelUsers(string channelName) => await GetAllUsers();
+        public async Task<List<ChannelUser>> GetChannelUsersAsync(string channelName) => await GetAllUsersAsync();
         
 
         // Messages
-        public async Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from)
+        public async Task<List<ChannelMessage>> GetMessagesAsync(string channelName, DateTime? from)
         {
             // 1. getchannel
             var channel = await GetChannelByName(channelName);
@@ -293,10 +293,10 @@ namespace Siemplify.Common.ExternalChannels
         }
 
 
-        public async Task<List<ChannelMessage>> GetMessages(string channelName) => await GetMessages(channelName, null);
+        public async Task<List<ChannelMessage>> GetMessagesAsync(string channelName) => await GetMessagesAsync(channelName, null);
 
 
-        public async Task SendMessage(string channelName, string message)
+        public async Task SendMessageAsync(string channelName, string message)
         {            
             var channelId = (await GetChannelByName(channelName))?.id;
             if (channelId == null)
@@ -308,6 +308,71 @@ namespace Siemplify.Common.ExternalChannels
             {
                 SuccessMessage = "Done",
             };
+        }
+
+        #endregion
+
+
+        #region IExternalChannelProvider implementation. Synchronous methods.
+
+        private async Task<T> CallWithSyncResult<T>(Func<Task<T>> asyncFunc) 
+        {
+            var result = await asyncFunc().ConfigureAwait(false);
+            return result;
+        }
+
+
+        // obtains on Connect()  
+        private async Task<ChannelUser> AwaitAddUserToChannel(string channelName, string userName) =>
+            await AddUserToChannelAsync(channelName, userName).ConfigureAwait(false);
+
+        public ChannelUser AddUserToChannel(string channelName, string userName) =>        
+            AsyncHelpers.RunSync(() => AddUserToChannelAsync(channelName, userName));        
+        
+
+        public bool CreateChannel(string channelName, List<string> channelUsers)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChannelUser> GetAllUsers(string userPrefix = "")
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChannelUser> GetChannelUsers(string channelName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChannelMessage> GetMessages(string channelName, DateTime? from)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<ChannelMessage> GetMessages(string channelName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveUserFromChannel(string channelName, string userName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SendMessage(string channelName, string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CloseChannel(string channelName)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

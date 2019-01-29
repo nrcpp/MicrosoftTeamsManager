@@ -11,16 +11,16 @@ namespace Siemplify.Common.ExternalChannels
 {
     interface IExternalChannelProviderAsync
     {
-        Task<ChannelUser> AddUserToChannel(string channelName, string userName);
-        Task<bool> CreateChannel(string channelName, List<string> channelUsers);
-        Task<List<ChannelUser>> GetAllUsers(string userPrefix = "");
-        Task<List<ChannelUser>> GetChannelUsers(string channelName);
-        Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from);
-        Task<List<ChannelMessage>> GetMessages(string channelName);
-        Task RemoveUserFromChannel(string channelName, string userName);
-        Task SendMessage(string channelName, string message);
-        Task Connect();
-        Task CloseChannel(string channelName);
+        Task<ChannelUser> AddUserToChannelAsync(string channelName, string userName);
+        Task<bool> CreateChannelAsync(string channelName, List<string> channelUsers);
+        Task<List<ChannelUser>> GetAllUsersAsync(string userPrefix = "");
+        Task<List<ChannelUser>> GetChannelUsersAsync(string channelName);
+        Task<List<ChannelMessage>> GetMessagesAsync(string channelName, DateTime? from);
+        Task<List<ChannelMessage>> GetMessagesAsync(string channelName);
+        Task RemoveUserFromChannelAsync(string channelName, string userName);
+        Task SendMessageAsync(string channelName, string message);
+        Task ConnectAsync();
+        Task CloseChannelAsync(string channelName);
 
         string Provider{ get; }
     }
