@@ -329,7 +329,7 @@ namespace GraphAPI.Web.Controllers
         }
 
         [Authorize]
-        public async Task<ActionResult> AddUser()
+        public async Task<ActionResult> AddUserTest()
         {
             // #GetMessages
             await _channelProvider.SelectFirstTeam();
@@ -341,6 +341,21 @@ namespace GraphAPI.Web.Controllers
             {
                 SuccessMessage = user != null ? $"User '{testUserName}' added to team {testTeamName}." : 
                                                 $"User {testUserName} or Team {testTeamName} - not found",
+            });
+        }
+
+        [Authorize]
+        public async Task<ActionResult> RemoveUserTest()
+        {
+            // #GetMessages
+            await _channelProvider.SelectFirstTeam();
+            string testUserName = "Test Two",
+                   testTeamName = "MsTeamsManager Test";
+            await _channelProvider.RemoveUserFromChannel(testTeamName, testUserName);
+
+            return View("Graph", new FormOutput()
+            {
+                SuccessMessage = "Done",
             });
         }
 

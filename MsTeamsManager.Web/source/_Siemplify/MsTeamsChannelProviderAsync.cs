@@ -169,9 +169,10 @@ namespace Siemplify.Common.ExternalChannels
                 return false;
             }
 
+            // TODO: add user to team if not exists
             bool result = true;
-            foreach (var user in channelUsers)
-                result &= (await AddUserToChannelInternal(channel, user)) != null;
+            //foreach (var user in channelUsers)
+            //    result &= (await AddUserToChannel(channel, user)) != null;
 
             return result;
         }
@@ -193,23 +194,9 @@ namespace Siemplify.Common.ExternalChannels
             (await GetAllUsers()).FirstOrDefault(u => u.FullName == name);
 
 
-        private async Task<ChannelUser> AddUserToChannelInternal(Channel channelId, string userName)
-        {
-            ChannelUser result = new ChannelUser()
-            {
-                FullName = userName
-            };
 
-            //
-            Log("Error: ");
-
-            return result;
-        }
-
-
-        // NOTE: Uses to add user to team. Every user in team could attend any channel
-        // TODO: channel
-        public async Task<ChannelUser> AddUserToChannel(string teamName, string userName)
+        // Add/remove to channel
+        private async Task<ChannelUser> AddOrRemoveUserInTeam(string teamName, string userName, bool add)
         {
             // find team
             var teams = await graphService.GetMyTeams(Token);
@@ -226,15 +213,30 @@ namespace Siemplify.Common.ExternalChannels
             {
                 Log($"{userName} - user not found");
                 return null;
-            }
+            }            
 
-            string payload = $"{{ '@odata.id': '{GraphService.GraphBetaEndpoint}/users/{user.UserId}' }}";
-            string response = await graphService.HttpPost($"/groups/{CurrentTeamId}/members/$ref", payload);
-            Log(response);
+            if (add)
+            {
+                string payload = $"{{ '@odata.id': '{GraphService.GraphBetaEndpoint}/users/{user.UserId}' }}";
+                await graphService.HttpPost($"/groups/{teamToAddTo.id}/members/$ref", payload);
+            }
+            else
+                await graphService.HttpDelete($"/groups/{teamToAddTo.id}/members/{user.UserId}/$ref", GraphService.GraphV1Endpoint);
 
             return user;
         }
 
+
+        // NOTE: Add user to team. Every user in team could attend any channel        
+        public async Task<ChannelUser> AddUserToChannel(string teamName, string userName) =>
+            await AddOrRemoveUserInTeam(teamName, userName, add: true);
+
+
+        // NOTE: No API to remove user from channel. Instead remove user from team.
+        // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
+        public async Task RemoveUserFromChannel(string teamName, string userName) =>
+            await AddOrRemoveUserInTeam(teamName, userName, add: false);
+        
 
         public async Task CloseChannel(string channelName)
         {
@@ -267,12 +269,6 @@ namespace Siemplify.Common.ExternalChannels
         // See: https://docs.microsoft.com/en-us/microsoftteams/teams-channels-overview
         public async Task<List<ChannelUser>> GetChannelUsers(string channelName) => await GetAllUsers();
         
-        public async Task RemoveUserFromChannel(string channelName, string userName)
-        {
-            // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
-            Log("ERROR: No API to remove user from channel");
-        }
-
 
         // Messages
         public async Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from)
