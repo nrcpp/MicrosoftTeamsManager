@@ -315,65 +315,37 @@ namespace Siemplify.Common.ExternalChannels
 
         #region IExternalChannelProvider implementation. Synchronous methods.
 
-        private async Task<T> CallWithSyncResult<T>(Func<Task<T>> asyncFunc) 
-        {
-            var result = await asyncFunc().ConfigureAwait(false);
-            return result;
-        }
-
-
-        // obtains on Connect()  
-        private async Task<ChannelUser> AwaitAddUserToChannel(string channelName, string userName) =>
-            await AddUserToChannelAsync(channelName, userName).ConfigureAwait(false);
-
         public ChannelUser AddUserToChannel(string channelName, string userName) =>        
             AsyncHelpers.RunSync(() => AddUserToChannelAsync(channelName, userName));        
         
 
-        public bool CreateChannel(string channelName, List<string> channelUsers)
-        {
-            throw new NotImplementedException();
-        }
+        public bool CreateChannel(string channelName, List<string> channelUsers) =>
+            AsyncHelpers.RunSync(() => CreateChannelAsync(channelName, channelUsers));
 
-        public List<ChannelUser> GetAllUsers(string userPrefix = "")
-        {
-            throw new NotImplementedException();
-        }
 
-        public List<ChannelUser> GetChannelUsers(string channelName)
-        {
-            throw new NotImplementedException();
-        }
+        public List<ChannelUser> GetAllUsers(string userPrefix = "") =>
+            AsyncHelpers.RunSync(() => GetAllUsersAsync(userPrefix));
+        
+        public List<ChannelUser> GetChannelUsers(string channelName) =>
+            AsyncHelpers.RunSync(() => GetChannelUsersAsync(channelName));
+        
 
         public List<ChannelMessage> GetMessages(string channelName, DateTime? from)
-        {
-            throw new NotImplementedException();
-        }
+            => AsyncHelpers.RunSync(() => GetMessagesAsync(channelName, from));
+        
+        public List<ChannelMessage> GetMessages(string channelName) => AsyncHelpers.RunSync(() => GetMessagesAsync(channelName));
 
-        public List<ChannelMessage> GetMessages(string channelName)
-        {
-            throw new NotImplementedException();
-        }
 
         public void RemoveUserFromChannel(string channelName, string userName)
-        {
-            throw new NotImplementedException();
-        }
-
+            => AsyncHelpers.RunSync(() => RemoveUserFromChannelAsync(channelName, userName));
+    
         public void SendMessage(string channelName, string message)
-        {
-            throw new NotImplementedException();
-        }
+            => AsyncHelpers.RunSync(() => SendMessageAsync(channelName, message));
 
         public void Connect()
-        {
-            throw new NotImplementedException();
-        }
+            => AsyncHelpers.RunSync(() => ConnectAsync());
 
-        public void CloseChannel(string channelName)
-        {
-            throw new NotImplementedException();
-        }
+        public void CloseChannel(string channelName) => AsyncHelpers.RunSync(() => CloseChannelAsync(channelName));
 
         #endregion
     }
