@@ -30,6 +30,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Auth
         private static readonly AuthProvider instance = new AuthProvider();
         private AuthProvider() { }
 
+
         public static AuthProvider Instance
         {
             get
@@ -60,7 +61,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Auth
             }
 
             // Unable to retrieve the access token silently.
-            catch (MsalSilentTokenAcquisitionException)
+            catch (MsalSilentTokenAcquisitionException ex)
             {
                 HttpContext.Current.Request.GetOwinContext().Authentication.Challenge(
                     new AuthenticationProperties() { RedirectUri = "/" },

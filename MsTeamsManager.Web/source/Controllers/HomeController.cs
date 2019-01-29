@@ -32,7 +32,6 @@ namespace GraphAPI.Web.Controllers
         public HomeController()
         {
             graphService = new GraphService();
-
         }
 
         private async Task<ActionResult> WithExceptionHandling(Func<string, FormOutput> f, [CallerMemberName] string callerName = "")
@@ -69,7 +68,9 @@ namespace GraphAPI.Web.Controllers
                 if (output.ShowGroupDropdown)
                     output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();
 
-                //results.Items = await graphService.GetMyTeams(accessToken, Convert.ToString(Resource.Prop_ID));
+                if (output.ShowUsersOutput)
+                    output.Users = (await graphService.GetUsers()).ToArray();
+
                 return View("Graph", output);
             }
             catch (Exception e)
@@ -94,6 +95,7 @@ namespace GraphAPI.Web.Controllers
                 );
         }
 
+
         [Authorize]
         public async Task<ActionResult> GetTeamsAction(FormOutput data)
         {
@@ -109,6 +111,39 @@ namespace GraphAPI.Web.Controllers
                 }
                 );
         }
+
+
+
+        [Authorize]
+        public async Task<ActionResult> GetUsersForm()
+        {
+            return await WithExceptionHandling(
+                token =>
+                {
+                    return new FormOutput()
+                    {
+                        ShowUsersOutput = true
+                    };
+                }
+                );
+        }
+
+        [Authorize]
+        public async Task<ActionResult> GetUsersAction()
+        {
+            var output = new FormOutput()
+            {
+                Users = (await _channelProvider.GetAllUsers()).Select(u => new User()
+                {
+                    displayName = u.FullName,
+                    id = u.UserId
+                }).ToArray(),
+                ShowUsersOutput = true
+            };
+
+            return View("Graph", output);
+        }
+
 
         [Authorize]
         public async Task<ActionResult> GetChannelsForm()
@@ -128,18 +163,17 @@ namespace GraphAPI.Web.Controllers
         [Authorize]
         public async Task<ActionResult> GetChannelsAction(FormOutput data)
         {
-            return await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    var channels = (await graphService.GetChannels(token, data.SelectedTeam)).ToArray();
-                    return new FormOutput()
-                    {
-                        Channels = channels,
-                        ShowChannelOutput = true
-                    };
-                }
-                );
+            _channelProvider.CurrentTeamId = data.SelectedTeam;
+
+            var output = new FormOutput()
+            {
+                Channels = await _channelProvider.GetChannels(),
+                ShowChannelOutput = true
+            };
+            
+            return View("Graph", output);
         }
+
 
         [Authorize]
         public async Task<ActionResult> GetAppsForm()
@@ -195,7 +229,11 @@ namespace GraphAPI.Web.Controllers
         public async Task<ActionResult> PostChannelsAction(FormOutput data)
         {
             _channelProvider.CurrentTeamId = data.SelectedTeam;
+
+            // Create channel
+            // TODO: add users
             await _channelProvider.CreateChannel(data.NameInput, new List<string>() { });
+
             return View("Graph", _channelProvider.LastResult);
         }
 
@@ -221,24 +259,10 @@ namespace GraphAPI.Web.Controllers
         public async Task<ActionResult> PostMessageAction(FormOutput data)
         {
             _channelProvider.CurrentTeamId = data.SelectedTeam;
-            string channelName = data.SelectedChannel;
 
-            await _channelProvider.SendMessage("channel name from id", data.MessageBodyInput);
+            var channelName = await _channelProvider.GetChannelById(data.SelectedChannel);
+            await _channelProvider.SendMessage(channelName?.displayName, data.MessageBodyInput);
             return View("Graph", _channelProvider.LastResult);
-
-#if false
-            return await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    await graphService.PostMessage(token,
-                        data.SelectedTeam, data.SelectedChannel, data.MessageBodyInput);
-                    return new FormOutput()
-                    {
-                        SuccessMessage = "Done",
-                    };
-                }
-                );
-#endif
         }
 
 
@@ -281,6 +305,12 @@ namespace GraphAPI.Web.Controllers
         public async Task<ActionResult> Index()
         {            
             await _channelProvider.Connect();
+
+            // Uncomment to test methods
+
+            // #CloseChannel
+            // var channels = await _channelProvider.GetChannels();
+            // await _channelProvider.CloseChannel(channels.Last().displayName);
 
             return View("Graph", _channelProvider.LastResult);
         }

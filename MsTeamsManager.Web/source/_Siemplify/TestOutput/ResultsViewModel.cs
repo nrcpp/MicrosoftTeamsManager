@@ -4,6 +4,7 @@
 */
 
 
+using Siemplify.Common.ExternalChannels.DataModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -77,8 +78,10 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
         public bool ShowNameInput { get; set; } = false;
         public bool ShowDescriptionInput { get; set; } = false;
         public bool ShowMessageBodyInput { get; set; } = false;
+        public bool ShowUsersOutput { get; set; } = false;
 
         public Channel[] Channels { get; set; } // output
+        public User[] Users { get; set; } // output
 
         [Display(Name = "Channel")]
         public string SelectedChannel{ get; set; }  // input

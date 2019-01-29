@@ -30,8 +30,8 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
     {
         public HttpClient httpClient = new HttpClient();
         public string accessToken;
-        public string graphV1Endpoint = "https://graph.microsoft.com/v1.0";
-        public string graphBetaEndpoint = "https://graph.microsoft.com/beta";
+        public const string GraphV1Endpoint = "https://graph.microsoft.com/v1.0";
+        public const string GraphBetaEndpoint = "https://graph.microsoft.com/beta";
         public static readonly JsonSerializerSettings jsonSettings =
             new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
@@ -125,7 +125,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
         public async Task<HttpResponse> CallGraphWithHeaders(HttpMethod method, string uri, object body = null, string endpoint = null, int retries = 0, int retryDelay = 30)
         {
             if (endpoint == null)
-                endpoint = graphV1Endpoint;
+                endpoint = GraphV1Endpoint;
 
             string bodyString;
             if (body == null)
@@ -163,7 +163,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
             // BUG: Implement retries
 
             if (endpoint == null)
-                endpoint = graphV1Endpoint;
+                endpoint = GraphV1Endpoint;
             string bodyString = (body == null) ? null : JsonConvert.SerializeObject(body, jsonSettings);
 
             Debug.Assert(accessToken != null);

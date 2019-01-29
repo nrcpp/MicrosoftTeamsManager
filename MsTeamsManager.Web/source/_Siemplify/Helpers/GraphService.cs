@@ -42,6 +42,10 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
                 });
         }
 
+        public async Task<User[]> GetUsers() => await HttpGetList<User>($"/users");
+        public async Task<Team[]> GetTeams() => await HttpGetList<Team>($"/teams");
+        
+
         public async Task<IEnumerable<Channel>> GetChannels(string accessToken, string teamId)
         {
             string endpoint = $"{GraphRootUri}/teams/{teamId}/channels";
@@ -52,9 +56,9 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
         public async Task<IEnumerable<TeamsApp>> GetApps(string accessToken, string teamId)
         {
             // to do: switch to the V1 installedApps API
-            return await HttpGetList<TeamsApp>($"/teams/{teamId}/apps", endpoint: graphBetaEndpoint);
+            return await HttpGetList<TeamsApp>($"/teams/{teamId}/apps", endpoint: GraphBetaEndpoint);
         }
-
+        
 
         /// <summary>
         /// Get the current user's id from their profile.
@@ -75,14 +79,14 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
             return userId?.Trim();
         }
 
-        public async Task<IEnumerable<Team>> GetMyTeams(string accessToken)
+        public async Task<Team []> GetMyTeams(string accessToken)
         {
             return await HttpGetList<Team>($"/me/joinedTeams");
         }
 
-        public async Task<IEnumerable<Group>> GetMyGroups(string accessToken)
+        public async Task<Group []> GetMyGroups(string accessToken)
         {
-            return await HttpGetList<Group>($"/me/joinedGroups", endpoint: graphBetaEndpoint);
+            return await HttpGetList<Group>($"/me/joinedGroups", endpoint: GraphBetaEndpoint);
         }
 
         public async Task PostMessage(string accessToken, string teamId, string channelId, string message)
@@ -98,7 +102,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
                         }
                     }
                 },
-                endpoint: graphBetaEndpoint);
+                endpoint: GraphBetaEndpoint);
         }
 
         public async Task<Group> CreateNewTeamAndGroup(string accessToken, String displayName, String mailNickname, String description)
@@ -145,6 +149,11 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
                 });
         }
 
+        internal Task GetChannels(object token, string currentTeamId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task UpdateTeam(string teamId, string accessToken)
         {
             await HttpPatch($"/teams/{teamId}",
@@ -167,7 +176,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
             String userId = (await HttpGet<User>($"/users/{upn}")).id;
 
             // Step 2 -- add that id to the group
-            string payload = $"{{ '@odata.id': '{graphBetaEndpoint}/users/{userId}' }}";
+            string payload = $"{{ '@odata.id': '{GraphBetaEndpoint}/users/{userId}' }}";
             await HttpPost($"/groups/{teamId}/members/$ref", payload);
 
             if (isOwner)

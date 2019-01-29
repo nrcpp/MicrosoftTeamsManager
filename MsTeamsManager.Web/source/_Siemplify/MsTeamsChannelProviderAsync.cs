@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web.Mvc;
@@ -14,10 +15,25 @@ using Siemplify.Common.ExternalChannels.DataModel;
 namespace Siemplify.Common.ExternalChannels
 {
     public class MsTeamsChannelProviderAsync : IExternalChannelProviderAsync
-    {
+    {        
         readonly GraphService graphService = new GraphService();
-        
+        private string _token;
+
         public string CurrentTeamId { get; set; }
+
+
+
+        // obtains on Connect()  
+        public string Token 
+        {
+            get
+            {                
+                return _token;
+            }
+
+            private set { _token = value; }
+        }             
+
         public FormOutput LastResult { get; private set; }
 
         public MsTeamsChannelProviderAsync()
@@ -31,48 +47,59 @@ namespace Siemplify.Common.ExternalChannels
             Console.WriteLine($"[{caller}]: {msg}");
 
 
-        private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> f, [CallerMemberName] string callerName = "")
+        private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> call, [CallerMemberName] string callerName = "")
         {
             return await WithExceptionHandlingAsync(
-                async s => f(s),
+                async s => call(s),
                 callerName);
         }
 
-        private async Task<FormOutput> WithExceptionHandlingAsync(Func<string, Task<FormOutput>> f, [CallerMemberName] string callerName = "")
+        private async Task<FormOutput> WithExceptionHandlingAsync(Func<string, Task<FormOutput>> call, [CallerMemberName] string callerName = "")
         {
             FormOutput output = new FormOutput();
 
             try
-            {                
+            {
                 // Configuration settings have to be set
                 if (ConfigurationManager.AppSettings["ida:AppId"] == null
                     || ConfigurationManager.AppSettings["ida:AppSecret"] == null)
                 {
-                    Log("You need to put your appid and appsecret in Web.config.secrets. See README.md for details.");                    
+                    Log("You need to put your appid and appsecret in Web.config.secrets. See README.md for details.");
                     return output;
                 }
 
                 // Get an access token.
                 string accessToken = await AuthProvider.Instance.GetUserAccessTokenAsync();
                 graphService.accessToken = accessToken;
-                output = await f(accessToken);
+                output = await call(accessToken);
 
                 output.Action = callerName.Replace("Form", "Action");
 
-                output.UserUpn = await graphService.GetMyId(accessToken); 
+                output.UserUpn = await graphService.GetMyId(accessToken);
 
                 if (output.ShowTeamDropdown)
                     output.Teams = (await graphService.GetMyTeams(accessToken)).ToArray();
 
                 if (output.ShowGroupDropdown)
-                    output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();                
+                    output.Groups = (await graphService.GetMyGroups(accessToken)).ToArray();
             }
             catch (Exception ex)
             {
-                Log(ex.Message);             
+                Log(ex.Message);
             }
 
             return output;
+        }
+
+        private ChannelUser ToChannelUser(User user)
+        {
+            return new ChannelUser()
+            {
+                UserId = user.id,
+
+                FullName = user.displayName,
+                Picture = "",               // NOTE: no field in response for this
+            };
         }
 
         #endregion
@@ -94,25 +121,23 @@ namespace Siemplify.Common.ExternalChannels
                 }
             );
 
-            CurrentTeamId = LastResult.Teams?.FirstOrDefault()?.id;     // select first team on connection
+            Token = await AuthProvider.Instance.GetUserAccessTokenAsync();
+            CurrentTeamId = LastResult.Teams?.FirstOrDefault()?.id;     // NOTE: select first team on connection
         }
-        
 
+
+        // Channels
         private async Task<FormOutput> CreateChannelInternal(string channelName, string channelDescription)
         {
-            LastResult = await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    await graphService.CreateChannel(token,
+            await graphService.CreateChannel(Token,
                         CurrentTeamId, channelName, channelDescription);
-                    var channels = (await graphService.GetChannels(token, CurrentTeamId)).ToArray();
-                    return new FormOutput()
-                    {
-                        Channels = channels,
-                        ShowChannelOutput = true
-                    };
-                }
-            );
+            var channels = (await graphService.GetChannels(Token, CurrentTeamId)).ToArray();
+
+            LastResult = new FormOutput()
+            {
+                Channels = channels,
+                ShowChannelOutput = true
+            };
 
             return LastResult;
         }
@@ -131,50 +156,34 @@ namespace Siemplify.Common.ExternalChannels
 
             bool result = true;
             foreach (var user in channelUsers)
-                result &= (await AddUserToChannelInternal(channel.id, channelName, user)) != null;
+                result &= (await AddUserToChannelInternal(channel, user)) != null;
 
             return result;
         }
 
-        ChannelUser FromResponseUser(User user)
+        public async Task<Channel[]> GetChannels()
         {
-            return new ChannelUser()
-            {
-                UserId = user.id,
-
-                // TODO: add fields to User
-                FullName = "<TODO fullname>", // user.fullname
-                Picture = "<TODO picture>",
-            };
+            return (await graphService.GetChannels(Token, CurrentTeamId)).ToArray();
         }
 
-        private async Task<ChannelUser> AddUserToChannelInternal(string id, string channelName, string userName)
+        private async Task<Channel> GetChannelByName(string name) =>
+            (await GetChannels())?.FirstOrDefault(ch => ch.displayName == name);
+
+        public async Task<Channel> GetChannelById(string id) =>
+            (await GetChannels())?.FirstOrDefault(ch => ch.id == id);
+
+
+        // users
+        public async Task<ChannelUser> GetUserByFullName(string name) =>
+            (await GetAllUsers()).FirstOrDefault(u => u.FullName == name);
+
+
+        private async Task<ChannelUser> AddUserToChannelInternal(Channel channelId, string userName)
         {
             ChannelUser result = null;
 
             return result;
         }
-
-
-        private async Task<Channel []> GetChannels()
-        {            
-            var response = await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    var channels = (await graphService.GetChannels(token, CurrentTeamId)).ToArray();
-                    return new FormOutput()
-                    {
-                        Channels = channels,
-                        ShowChannelOutput = true
-                    };
-                }
-            );
-
-            return response.Channels;
-        }
-
-        private async Task<Channel> GetChannelByName(string name) =>        
-            (await GetChannels())?.FirstOrDefault(ch => ch.displayName == name);
 
         public async Task<ChannelUser> AddUserToChannel(string channelName, string userName)
         {
@@ -186,26 +195,40 @@ namespace Siemplify.Common.ExternalChannels
             }
 
             // add user to channel call
-            var response = await AddUserToChannelInternal(channel.id, channelName, userName);
+            var response = await AddUserToChannelInternal(channel, userName);
 
-            response.
+            return response;
         }
 
         public async Task CloseChannel(string channelName)
         {
-            
+            var channel = await GetChannelByName(channelName);
+            if (channel == null)
+            {
+                Log($"{channelName} - channel not found");
+                return;
+            }
+
+
+            // DELETE /teams/{id}/channels/{id}
+            var response = await graphService.HttpDelete($"/teams/{CurrentTeamId}/channels/{channel.id}", HttpHelpers.GraphBetaEndpoint);
+
+            Log(response);
         }
 
 
 
-        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "")
-        {
-            throw new NotImplementedException();
-        }
+        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "") =>
+            (await graphService.GetUsers()).Select(u => ToChannelUser(u)).ToList();
+
 
         public async Task<List<ChannelUser>> GetChannelUsers(string channelName)
         {
-            throw new NotImplementedException();
+            // 1. getchannels
+            // 2. get users in certain channel
+
+
+            return null;
         }
 
 
@@ -229,7 +252,7 @@ namespace Siemplify.Common.ExternalChannels
             var channelId = (await GetChannelByName(channelName))?.id;
             if (channelId == null)
                 throw new ArgumentException("No channel found - " + channelName);
-                
+
             LastResult = await WithExceptionHandlingAsync(
                 async token =>
                 {
