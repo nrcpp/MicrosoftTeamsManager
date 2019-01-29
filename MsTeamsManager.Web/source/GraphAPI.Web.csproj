@@ -331,6 +331,7 @@
     <Content Include="Views\Shared\_ResultsPartial.cshtml" />
     <Content Include="Views\Shared\_ResultsTable.cshtml" />
     <Content Include="Web.config.secrets" />
+    <Content Include="Web.config.dk-orig.secrets" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_GlobalResources\Resource.resx">

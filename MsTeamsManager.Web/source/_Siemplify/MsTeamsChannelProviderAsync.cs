@@ -200,24 +200,26 @@ namespace Siemplify.Common.ExternalChannels
                 FullName = userName
             };
 
-
+            //
+            Log("Error: ");
 
             return result;
         }
 
+
+        // NTE: Uses to add user to team. Every user in team could attend any channel
         public async Task<ChannelUser> AddUserToChannel(string channelName, string userName)
         {
-            var channel = await GetChannelByName(channelName);
-            if (channel == null)
+            ChannelUser result = new ChannelUser()
             {
-                Log($"{channelName} - channel not found");
-                return null;
-            }
+                FullName = userName
+            };
 
             // add user to channel call
-            var response = await AddUserToChannelInternal(channel, userName);
+            var users = await GetAllUsers();
+            
 
-            return response;
+            return result;
         }
 
 
@@ -239,34 +241,23 @@ namespace Siemplify.Common.ExternalChannels
 
 
 
-        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "") =>
-            (await graphService.GetUsers()).Select(u => ToChannelUser(u)).ToList();
-
-
-        public async Task<List<ChannelUser>> GetChannelUsers(string channelName)
+        public async Task<List<ChannelUser>> GetAllUsers(string userPrefix = "")
         {
-            var result = new List<ChannelUser>(); 
+            var users = await graphService.GetUsers();
+            if (!string.IsNullOrEmpty(userPrefix))
+                users = users.Where(u => u.displayName?.StartsWith(userPrefix) == true).ToArray();
 
-            // 1. getchannel
-            var channel = await GetChannelByName(channelName);
-            if (channel == null)
-            {
-                Log($"{channelName} - channel not found");
-                return null;
-            }
-
-
-            // 2. get users in given channel
-            // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
-            Log("ERROR: No API to obtain users in channel");
-
-            return result;
+            return users.Select(u => ToChannelUser(u)).ToList();
         }
 
+        // All users in Team could participate in any channel
+        // See: https://docs.microsoft.com/en-us/microsoftteams/teams-channels-overview
+        public async Task<List<ChannelUser>> GetChannelUsers(string channelName) => await GetAllUsers();
+        
         public async Task RemoveUserFromChannel(string channelName, string userName)
         {
             // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
-            throw new NotImplementedException("ERROR: No API to remove user from channel");
+            Log("ERROR: No API to remove user from channel");
         }
 
 

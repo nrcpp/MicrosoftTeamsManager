@@ -149,11 +149,6 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
                 });
         }
 
-        internal Task GetChannels(object token, string currentTeamId)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task UpdateTeam(string teamId, string accessToken)
         {
             await HttpPatch($"/teams/{teamId}",
