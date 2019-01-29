@@ -22,18 +22,6 @@ namespace Siemplify.Common.ExternalChannels
         public string CurrentTeamId { get; set; }
 
 
-
-        // obtains on Connect()  
-        public string Token 
-        {
-            get
-            {                
-                return _token;
-            }
-
-            private set { _token = value; }
-        }             
-
         public FormOutput LastResult { get; private set; }
 
         public MsTeamsChannelProviderAsync()
@@ -45,6 +33,17 @@ namespace Siemplify.Common.ExternalChannels
 
         public static void Log(string msg, [CallerMemberName] string caller = null) =>
             Console.WriteLine($"[{caller}]: {msg}");
+
+
+        // obtains on Connect()  
+        private async Task<string> GetTokenAsync()
+        {
+            _token = await AuthProvider.Instance.GetUserAccessTokenAsync().ConfigureAwait(false);
+            graphService.accessToken = _token;
+            return _token;
+        }
+
+        private string Token => GetTokenAsync().Result;
 
 
         private async Task<FormOutput> WithExceptionHandling(Func<string, FormOutput> call, [CallerMemberName] string callerName = "")
@@ -120,8 +119,7 @@ namespace Siemplify.Common.ExternalChannels
                     ShowTeamDropdown = true,
                 }
             );
-
-            Token = await AuthProvider.Instance.GetUserAccessTokenAsync();
+            
             CurrentTeamId = LastResult.Teams?.FirstOrDefault()?.id;     // NOTE: select first team on connection
         }
 
@@ -248,21 +246,17 @@ namespace Siemplify.Common.ExternalChannels
         }
 
         public async Task SendMessage(string channelName, string message)
-        {
+        {            
             var channelId = (await GetChannelByName(channelName))?.id;
             if (channelId == null)
-                throw new ArgumentException("No channel found - " + channelName);
+                throw new ArgumentException("Channel not found - " + channelName);
 
-            LastResult = await WithExceptionHandlingAsync(
-                async token =>
-                {
-                    await graphService.PostMessage(token, CurrentTeamId, channelId, message);
-                    return new FormOutput()
-                    {
-                        SuccessMessage = "Done",
-                    };
-                }
-            );
+            await graphService.PostMessage(Token, CurrentTeamId, channelId, message);
+
+            LastResult = new FormOutput()
+            {
+                SuccessMessage = "Done",
+            };
         }
 
         #endregion

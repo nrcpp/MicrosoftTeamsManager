@@ -259,9 +259,8 @@ namespace GraphAPI.Web.Controllers
         public async Task<ActionResult> PostMessageAction(FormOutput data)
         {
             _channelProvider.CurrentTeamId = data.SelectedTeam;
-
-            var channelName = await _channelProvider.GetChannelById(data.SelectedChannel);
-            await _channelProvider.SendMessage(channelName?.displayName, data.MessageBodyInput);
+            
+            await _channelProvider.SendMessage(data.SelectedChannel, data.MessageBodyInput);
             return View("Graph", _channelProvider.LastResult);
         }
 
