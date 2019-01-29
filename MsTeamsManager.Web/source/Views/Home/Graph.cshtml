@@ -15,6 +15,7 @@
     @Html.ActionLink("Get Users", "GetUsersForm", "Home")<br />
     @Html.ActionLink("Get My Teams", "GetTeamsAction", "Home")<br />
     @Html.ActionLink("Get Channels", "GetChannelsForm", "Home")<br />
+    @Html.ActionLink("Get Messages from General channel", "Messages", "Home")<br />
     @Html.ActionLink("Get Apps", "GetAppsForm", "Home")<br />
     @Html.ActionLink("Create Channel", "PostChannelsForm", "Home")<br />
     @Html.ActionLink("Post Message", "PostMessageForm", "Home")<br />
@@ -30,6 +31,7 @@
     @Html.MaybeShowResultsTable(Model.ShowTeamOutput, Model.Teams, t => t.displayName, t => t.id);
     @Html.MaybeShowResultsTable(Model.ShowChannelOutput, Model.Channels, t => t.displayName, t => t.id);
     @Html.MaybeShowResultsTable(Model.ShowUsersOutput, Model.Users, t => t.displayName, t => t.id);
+    @Html.MaybeShowResultsTable(Model.ShowMessagesOutput, Model.Messages, t => t.Time.ToString(), t => $"{t.Username}: {t.Text}");
 
     <table>
         @Html.MaybeShowDropdown(Model.ShowTeamDropdown, Model.Teams, t => t.displayName, t => t.id, m => m.SelectedTeam)

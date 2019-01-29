@@ -59,6 +59,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
 
         public Team[] Teams { get; set; } // output
         public Group[] Groups { get; set; } // output
+        public ChannelMessage[] Messages { get; set; } // output
 
         [Display(Name = "Team")]
         public string SelectedTeam { get; set; }  // input
@@ -79,6 +80,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
         public bool ShowDescriptionInput { get; set; } = false;
         public bool ShowMessageBodyInput { get; set; } = false;
         public bool ShowUsersOutput { get; set; } = false;
+        public bool ShowMessagesOutput { get; set; } 
 
         public Channel[] Channels { get; set; } // output
         public User[] Users { get; set; } // output

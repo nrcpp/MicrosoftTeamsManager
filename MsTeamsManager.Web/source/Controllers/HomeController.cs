@@ -314,6 +314,19 @@ namespace GraphAPI.Web.Controllers
             return View("Graph", _channelProvider.LastResult);
         }
 
+        [Authorize]
+        public async Task<ActionResult> Messages()
+        {
+            // #GetMessages
+            await _channelProvider.SelectFirstTeam();
+            var messages = await _channelProvider.GetMessages("General");
+
+            return View("Graph", new FormOutput()
+            {
+                ShowMessagesOutput = true,
+                Messages = messages.ToArray(),
+            });
+        }
 
 
         [Authorize]

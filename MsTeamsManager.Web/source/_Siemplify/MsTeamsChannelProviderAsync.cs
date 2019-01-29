@@ -101,6 +101,23 @@ namespace Siemplify.Common.ExternalChannels
             };
         }
 
+
+        private ChannelMessage ToChannelMessage(HistoryMessages.Message m, Channel cannnel)
+        {
+            return new ChannelMessage()
+            {
+                Time = m.createdDateTime,
+                User = m.from?.user?.id,
+                Username = m.from?.user?.displayName,
+                Text = m.body?.content,
+                ChannelId = cannnel.id,
+            };
+        }
+
+
+        public async Task SelectFirstTeam() =>        
+            CurrentTeamId = (await graphService.GetMyTeams(Token)).FirstOrDefault()?.id;
+        
         #endregion
 
 
@@ -178,7 +195,12 @@ namespace Siemplify.Common.ExternalChannels
 
         private async Task<ChannelUser> AddUserToChannelInternal(Channel channelId, string userName)
         {
-            ChannelUser result = null;
+            ChannelUser result = new ChannelUser()
+            {
+                FullName = userName
+            };
+
+
 
             return result;
         }
@@ -197,6 +219,7 @@ namespace Siemplify.Common.ExternalChannels
 
             return response;
         }
+
 
         public async Task CloseChannel(string channelName)
         {
@@ -222,28 +245,56 @@ namespace Siemplify.Common.ExternalChannels
 
         public async Task<List<ChannelUser>> GetChannelUsers(string channelName)
         {
-            // 1. getchannels
-            // 2. get users in certain channel
+            var result = new List<ChannelUser>(); 
+
+            // 1. getchannel
+            var channel = await GetChannelByName(channelName);
+            if (channel == null)
+            {
+                Log($"{channelName} - channel not found");
+                return null;
+            }
 
 
-            return null;
-        }
+            // 2. get users in given channel
+            // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
+            Log("ERROR: No API to obtain users in channel");
 
-
-        public async Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<ChannelMessage>> GetMessages(string channelName)
-        {
-            throw new NotImplementedException();
+            return result;
         }
 
         public async Task RemoveUserFromChannel(string channelName, string userName)
         {
-            throw new NotImplementedException();
+            // See: https://docs.microsoft.com/en-us/graph/api/resources/teams-api-overview?view=graph-rest-1.0
+            throw new NotImplementedException("ERROR: No API to remove user from channel");
         }
+
+
+        // Messages
+        public async Task<List<ChannelMessage>> GetMessages(string channelName, DateTime? from)
+        {
+            // 1. getchannel
+            var channel = await GetChannelByName(channelName);
+            if (channel == null)
+            {
+                Log($"{channelName} - channel not found");
+                return null;
+            }
+
+            // 2. obtain messages
+            
+            // GET /teams/{id}/channels/{id}/messages
+            var messages = await graphService.HttpGet<HistoryMessages>($"/teams/{CurrentTeamId}/channels/{channel.id}/messages", GraphService.GraphBetaEndpoint);
+            var result = messages.value.Select(m => ToChannelMessage(m, channel)).ToList();
+            if (from != null)
+                result = result.Where(m => m.Time >= from).ToList();
+
+            return result;
+        }
+
+
+        public async Task<List<ChannelMessage>> GetMessages(string channelName) => await GetMessages(channelName, null);
+
 
         public async Task SendMessage(string channelName, string message)
         {            
