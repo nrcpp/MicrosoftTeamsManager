@@ -328,6 +328,21 @@ namespace GraphAPI.Web.Controllers
             });
         }
 
+        [Authorize]
+        public async Task<ActionResult> AddUser()
+        {
+            // #GetMessages
+            await _channelProvider.SelectFirstTeam();
+            string testUserName = "Test Two",
+                   testTeamName = "MsTeamsManager Test";
+            var user = await _channelProvider.AddUserToChannel(testTeamName, testUserName);
+
+            return View("Graph", new FormOutput()
+            {
+                SuccessMessage = user != null ? $"User '{testUserName}' added to team {testTeamName}." : 
+                                                $"User {testUserName} or Team {testTeamName} - not found",
+            });
+        }
 
         [Authorize]
         public async Task<ActionResult> AddTeamToGroupForm()

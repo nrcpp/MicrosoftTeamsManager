@@ -43,7 +43,7 @@ namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
         }
 
         public async Task<User[]> GetUsers() => await HttpGetList<User>($"/users");
-        public async Task<Team[]> GetTeams() => await HttpGetList<Team>($"/teams");
+        public async Task<Team[]> GetTeams() => await HttpGetList<Team>($"/teams", endpoint: GraphV1Endpoint);
         
 
         public async Task<IEnumerable<Channel>> GetChannels(string accessToken, string teamId)

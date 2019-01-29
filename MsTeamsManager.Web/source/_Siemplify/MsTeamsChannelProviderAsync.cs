@@ -207,19 +207,32 @@ namespace Siemplify.Common.ExternalChannels
         }
 
 
-        // NTE: Uses to add user to team. Every user in team could attend any channel
-        public async Task<ChannelUser> AddUserToChannel(string channelName, string userName)
+        // NOTE: Uses to add user to team. Every user in team could attend any channel
+        // TODO: channel
+        public async Task<ChannelUser> AddUserToChannel(string teamName, string userName)
         {
-            ChannelUser result = new ChannelUser()
+            // find team
+            var teams = await graphService.GetMyTeams(Token);
+            var teamToAddTo = teams.FirstOrDefault(t => t.displayName == teamName);
+            if (teamToAddTo == null)
             {
-                FullName = userName
-            };
+                Log($"{teamToAddTo} - team not found");
+                return null;
+            }
 
             // add user to channel call
-            var users = await GetAllUsers();
-            
+            var user = await GetUserByFullName(userName);
+            if (user == null)
+            {
+                Log($"{userName} - user not found");
+                return null;
+            }
 
-            return result;
+            string payload = $"{{ '@odata.id': '{GraphService.GraphBetaEndpoint}/users/{user.UserId}' }}";
+            string response = await graphService.HttpPost($"/groups/{CurrentTeamId}/members/$ref", payload);
+            Log(response);
+
+            return user;
         }
 
 
