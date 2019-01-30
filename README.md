@@ -38,4 +38,4 @@
 
 ## Links:
 - https://github.com/microsoftgraph/csharp-teams-sample-graph - base project for MsTeamsChannelProvider
-
+- https://docs.microsoft.com/en-us/azure/active-directory/develop/quickstart-v2-netcore-daemon - example of simple console MS teams app
