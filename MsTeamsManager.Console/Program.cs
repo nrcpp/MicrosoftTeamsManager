@@ -58,7 +58,10 @@ namespace MsTeamsManager
                     return;
                 }
                 else
-                    Log($"{testTeam} - Team selected");
+                {
+                    if (msTeamsManager.SelectTeam(testTeam).Result)
+                        Log($"{testTeam} - Team selected");
+                }
 
                 Log("Creating channel " + testChannel);
 
@@ -74,7 +77,7 @@ namespace MsTeamsManager
 
                 var user = msTeamsManager.AddUserToTeam(testTeam, "dk@flatsolutions.onmicrosoft.com");      // TODO: add existed user's email
                 if (user == null)                
-                    Log("User was not added to team");
+                    Log($"User was not added to team");
 
 
                 var msgs = msTeamsManager.GetMessages(testChannel);

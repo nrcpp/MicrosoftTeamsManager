@@ -83,6 +83,18 @@ namespace Siemplify.Common.ExternalChannels
                 Log("Warning: no teams found for current user. CurrentTeamId is null.");
         }
 
+        public async Task<bool> SelectTeam(string teamName)
+        {
+            CurrentTeamId = (await _graphService.GetMyTeams(Token)).FirstOrDefault(t => t.displayName == teamName)?.id;
+            if (CurrentTeamId == null)
+            {
+                Log($"Team '{teamName}' not found. CurrentTeamId is null.");
+                return false;
+            }
+
+            return true;
+        }
+
         internal Team[] GetMyTeams() => AsyncHelpers.RunSync(() => _graphService.GetMyTeams(Token));
 
         #endregion
