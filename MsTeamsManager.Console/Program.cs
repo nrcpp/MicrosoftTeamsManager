@@ -13,80 +13,95 @@ namespace MsTeamsManager
 {
     class Program
     {
+        static void Log(string msg) => Console.WriteLine(msg);
 
-        public static void Main()
+        static void SafeCall(Action call)
         {
             try
             {
-                var msTeamsManager = new MsTeamsChannelProvider();
-                msTeamsManager.Connect();
-
-                Console.WriteLine($"Token: {msTeamsManager.Token}\r\nCurrent Team Id: {msTeamsManager.CurrentTeamId}");
+                call();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-            }            
+                Log("Exception: " + ex.Message);
+            }
         }
 
-        private static async Task RunAsync()
+        public static void Main()
         {
-            AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
+            string testChannel = "Test Channel " + Guid.NewGuid().ToString().Substring(0, 5);
+            bool isChannelCreated = false;
+            var msTeamsManager = new MsTeamsChannelProvider();
 
-
-            // TODO: Remove this code
-#if DEBUG
-            if (Environment.MachineName == "PC") config = AuthenticationConfig.ReadFromJsonFile("appsettings-dk.json");
-#endif
-
-            // Even if this is a console application here, a daemon application is a confidential client application
-            ClientCredential clientCredentials;
-
-#if !VariationWithCertificateCredentials
-            clientCredentials = new ClientCredential(config.ClientSecret);
-#else
-            X509Certificate2 certificate = ReadCertificate(config.CertificateName);
-            clientCredentials = new ClientCredential(new ClientAssertionCertificate(certificate));
-#endif
-            var app = new ConfidentialClientApplication(config.ClientId, config.Authority, "https://daemon", clientCredentials, null, new TokenCache());
-
-            // With client credentials flows the scopes is ALWAYS of the shape "resource/.default", as the 
-            // application permissions need to be set statically (in the portal or by PowerShell), and then granted by
-            // a tenant administrator
-            string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-
-            AuthenticationResult result = null;
             try
-            {
-                result = await app.AcquireTokenForClientAsync(scopes);
-            }
-            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
-            {
-                // Invalid scope. The scope has to be of the form "https://resourceurl/.default"
-                // Mitigation: change the scope to be as expected
+            {                
+                msTeamsManager.Connect();
+                if (msTeamsManager.CurrentTeamId == null || msTeamsManager.Token == null)
+                {
+                    Log("No token or team to continue. Exit");
+                    return;
+                }
+                
+                var users = msTeamsManager.GetAllUsers();
+                Log($"{users.Count} members found in team");
+                if (users.Count < 2)
+                {
+                    Log("There are less than 2 users in team. Exit.");
+                    return;
+                }
+            
+
+                string testTeam = msTeamsManager.GetMyTeams().FirstOrDefault()?.displayName;
+                if (testTeam == null)
+                {
+                    Log("No teams found. Exit");
+                    return;
+                }
+                else
+                    Log($"{testTeam} - Team selected");
+
+                Log("Creating channel " + testChannel);
+
+                msTeamsManager.CreateChannel(testChannel, null);
+                isChannelCreated = true;
+
+                var teamUsers = msTeamsManager.GetTeamUsers(testTeam);
+                var buffer = $"Users in Team '{testTeam}':\r\n" + string.Join(", ", teamUsers.ConvertAll<string>(u => $"'{u.FullName}'"));
+                Log(buffer);
+
+                msTeamsManager.SendMessage(testChannel, buffer);
+
+
+                var user = msTeamsManager.AddUserToTeam(testTeam, "dk@flatsolutions.onmicrosoft.com");      // TODO: add existed user's email
+                if (user == null)                
+                    Log("User was not added to team");
+
+
+                var msgs = msTeamsManager.GetMessages(testChannel);
+                var messages = $"Messages from channel @{testChannel}:\r\n" + string.Join("\r\n", msgs.ConvertAll<string>(m => m.Text));
+
+                // Uncomment to remove second user from selected team
+                //Log($"RemoveUserFromTeam ({testTeam}, {users[1].FullName})");
+                //msTeamsManager.RemoveUserFromTeam(testTeam, users[1].FullName);
             }
 
-            if (result != null)
+            catch (Exception ex)
             {
-                var httpClient = new HttpClient();
-                var apiCaller = new ProtectedApiCallHelper(httpClient);
-                await apiCaller.CallWebApiAndProcessResultASync("https://graph.microsoft.com/v1.0/users", result.AccessToken, Display);
+                Log("Error: \r\n" + ex.Message);
             }
+            finally
+            {                
+                if (isChannelCreated)
+                {
+                    Console.WriteLine($"Press Enter to Close Channel '{testChannel}'");
+                    Console.ReadLine();
+
+                    SafeCall(() => msTeamsManager.CloseChannel(testChannel));       // remove previously created channel before 
+                }
+
+            }
+
+            Console.WriteLine("Press Enter to exit");  Console.ReadLine();
         }
-
-
-
-        /// <summary>
-        /// Display the result of the Web API call
-        /// </summary>
-        /// <param name="result">Object to display</param>
-        private static void Display(JObject result)
-        {
-            foreach (JProperty child in result.Properties().Where(p => !p.Name.StartsWith("@")))
-            {
-                Console.WriteLine($"{child.Name} = {child.Value}");
-            }
-        }
-
     }
 }

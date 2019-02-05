@@ -19,7 +19,7 @@ namespace Siemplify.Common.ExternalChannels
     public class MsTeamsChannelProvider : IExternalChannelProvider, IExternalChannelProviderAsync
     {        
         readonly GraphService _graphService = new GraphService();
-        private string _token;
+        
 
         // Don't change this constant
         // It is a constant that corresponds to fixed values in AAD that corresponds to Microsoft Graph
@@ -48,19 +48,7 @@ namespace Siemplify.Common.ExternalChannels
 
         #region Helper methods
 
-        public static void Log(string msg, [CallerMemberName] string caller = null) =>
-            Console.WriteLine($"[{caller}]: {msg}");
-
-
-        // obtains on Connect()  
-        private async Task<string> GetTokenAsync()
-        {
-            // TODO: get token
-            _token = "TODO: get token";  // await AuthProvider.Instance.GetUserAccessTokenAsync().ConfigureAwait(false);
-            _graphService.accessToken = _token;
-            return _token;
-        }
-        
+        public static void Log(string msg, [CallerMemberName] string caller = null) => Console.WriteLine($"[{caller}]: {msg}");
 
 
         private ChannelUser ToChannelUser(User user)
@@ -88,9 +76,15 @@ namespace Siemplify.Common.ExternalChannels
         }
 
 
-        public async Task SelectFirstTeam() =>        
+        public async Task SelectFirstTeam()
+        {
             CurrentTeamId = (await _graphService.GetMyTeams(Token)).FirstOrDefault()?.id;
-        
+            if (CurrentTeamId == null)
+                Log("Warning: no teams found for current user. CurrentTeamId is null.");
+        }
+
+        internal Team[] GetMyTeams() => AsyncHelpers.RunSync(() => _graphService.GetMyTeams(Token));
+
         #endregion
 
 
@@ -131,6 +125,7 @@ namespace Siemplify.Common.ExternalChannels
 
             return result;
         }
+        
 
         private async Task<AuthenticationResult> UserLogin()
         {
@@ -161,7 +156,7 @@ namespace Siemplify.Common.ExternalChannels
 
             return result;
 
-            // Uncomment to Login by opening Browser window:
+            // Uncomment to Login through Browser window:
             //_authenticationContext.TokenCache.Clear();
             //DeviceCodeResult deviceCodeResult = _authenticationContext.AcquireDeviceCodeAsync(aadResourceAppId, _authConfig.ClientId).Result;
             //Log(deviceCodeResult.Message);
@@ -171,7 +166,7 @@ namespace Siemplify.Common.ExternalChannels
 
         public async Task ConnectAsync()
         {
-            Token = CurrentTeamId = "<uncknown>";
+            Token = CurrentTeamId = null;
             
             _authenticationResult = await UserLogin();
             if (string.IsNullOrEmpty(_authenticationResult.AccessToken))
@@ -183,13 +178,9 @@ namespace Siemplify.Common.ExternalChannels
                 Log("You've successfully signed in as " + _authenticationResult.UserInfo.DisplayableId);
 
             Token = _graphService.accessToken = _authenticationResult.AccessToken;
-            
-            // select first team
-            var teams = await _graphService.GetMyTeams(Token);
-            CurrentTeamId = teams.FirstOrDefault()?.id;
 
-            if (CurrentTeamId == null)
-                Log("Warning: no teams found for current user. CurrentTeamId is null.");
+            // select first team to process other requests for it
+            await SelectFirstTeam();
         }
 
 
@@ -209,11 +200,14 @@ namespace Siemplify.Common.ExternalChannels
                 Log($"{channelName} - channel was not created");
                 return false;
             }
+            else
+                Log($"{channelName} - channel created");
 
-            // TODO: add user to team if not exists
-            bool result = true;
-            //foreach (var user in channelUsers)
-            //    result &= (await AddUserToChannel(channel, user)) != null;
+            if (channelUsers == null) return true;
+
+            bool result = true;            
+            foreach (var user in channelUsers)
+                result &= (await AddUserToChannelAsync(channelName, user)) != null;
 
             return result;
         }
@@ -292,7 +286,7 @@ namespace Siemplify.Common.ExternalChannels
             // DELETE /teams/{id}/channels/{id}
             var response = await _graphService.HttpDelete($"/teams/{CurrentTeamId}/channels/{channel.id}", HttpHelpers.GraphBetaEndpoint);
 
-            Log(response);
+            Log(string.IsNullOrEmpty(response) ? "OK" : response);
         }
 
 
@@ -351,9 +345,10 @@ namespace Siemplify.Common.ExternalChannels
 
         #region IExternalChannelProvider implementation. Synchronous methods.
 
-        public ChannelUser AddUserToChannel(string channelName, string userName) =>        
-            AsyncHelpers.RunSync(() => AddUserToChannelAsync(channelName, userName));        
-        
+        public ChannelUser AddUserToChannel(string channelName, string userName) =>
+            AsyncHelpers.RunSync(() => AddUserToChannelAsync(channelName, userName));
+
+        public ChannelUser AddUserToTeam(string teamName, string userName) => AddUserToChannel(teamName, userName);     // alias for MS Teams
 
         public bool CreateChannel(string channelName, List<string> channelUsers) =>
             AsyncHelpers.RunSync(() => CreateChannelAsync(channelName, channelUsers));
@@ -361,20 +356,23 @@ namespace Siemplify.Common.ExternalChannels
 
         public List<ChannelUser> GetAllUsers(string userPrefix = "") =>
             AsyncHelpers.RunSync(() => GetAllUsersAsync(userPrefix));
-        
+
         public List<ChannelUser> GetChannelUsers(string channelName) =>
             AsyncHelpers.RunSync(() => GetChannelUsersAsync(channelName));
-        
+
+        public List<ChannelUser> GetTeamUsers(string channelName) => GetChannelUsers(channelName);               // alias for MS Teams
 
         public List<ChannelMessage> GetMessages(string channelName, DateTime? from)
             => AsyncHelpers.RunSync(() => GetMessagesAsync(channelName, from));
-        
+
         public List<ChannelMessage> GetMessages(string channelName) => AsyncHelpers.RunSync(() => GetMessagesAsync(channelName));
 
 
         public void RemoveUserFromChannel(string channelName, string userName)
             => AsyncHelpers.RunSync(() => RemoveUserFromChannelAsync(channelName, userName));
-    
+
+        public void RemoveUserFromTeam(string teamName, string userName) => RemoveUserFromChannel(teamName, userName);      // alias for MS Teams
+
         public void SendMessage(string channelName, string message)
             => AsyncHelpers.RunSync(() => SendMessageAsync(channelName, message));
 
@@ -382,6 +380,7 @@ namespace Siemplify.Common.ExternalChannels
             => AsyncHelpers.RunSync(() => ConnectAsync());
 
         public void CloseChannel(string channelName) => AsyncHelpers.RunSync(() => CloseChannelAsync(channelName));
+
 
         #endregion
     }

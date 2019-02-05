@@ -60,6 +60,7 @@ namespace Siemplify.Common.ExternalChannels.Utils
                 catch (Exception e)
                 {
                     synch.InnerException = e;
+                    Console.WriteLine(e.Message);
                     throw;
                 }
                 finally

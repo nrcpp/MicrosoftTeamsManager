@@ -12,12 +12,20 @@ namespace Siemplify.Common.ExternalChannels
     interface IExternalChannelProvider
     {
         ChannelUser AddUserToChannel(string channelName, string userName);
+        ChannelUser AddUserToTeam(string teamName, string userName);
+
         bool CreateChannel(string channelName, List<string> channelUsers);
         List<ChannelUser> GetAllUsers(string userPrefix = "");
+
         List<ChannelUser> GetChannelUsers(string channelName);
+        List<ChannelUser> GetTeamUsers(string teamName);
+
         List<ChannelMessage> GetMessages(string channelName, DateTime? from);
         List<ChannelMessage> GetMessages(string channelName);
+
         void RemoveUserFromChannel(string channelName, string userName);
+        void RemoveUserFromTeam(string teamName, string userName);
+
         void SendMessage(string channelName, string message);
         void Connect();
         void CloseChannel(string channelName);

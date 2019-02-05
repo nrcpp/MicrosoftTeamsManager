@@ -75,7 +75,6 @@
     <Compile Include="InternalModels\TeamsApp.cs" />
     <Compile Include="Utils\ConsoleUtils.cs" />
     <Compile Include="Utils\FileCache.cs" />
-    <Compile Include="Utils\ProtectedApiCallHelper.cs" />
     <Compile Include="Siemplify\Models\ChannelMessage.cs" />
     <Compile Include="Siemplify\Models\ChannelUser.cs" />
     <Compile Include="Program.cs" />
