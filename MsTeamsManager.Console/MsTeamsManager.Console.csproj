@@ -88,7 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="appsettings-dk.json">
+    <Content Include="appsettings-dk-machine.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="appsettings.json">

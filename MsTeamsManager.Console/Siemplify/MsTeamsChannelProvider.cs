@@ -42,7 +42,7 @@ namespace Siemplify.Common.ExternalChannels
 
             // NOTE: For testing purposes on my machine
 #if DEBUG
-            if (Environment.MachineName == "PC") _authConfig = AuthenticationConfig.ReadFromJsonFile("appsettings-dk.json");
+            if (Environment.MachineName == "PC") _authConfig = AuthenticationConfig.ReadFromJsonFile("appsettings-dk-machine.json");
 #endif
         }
 
@@ -154,7 +154,8 @@ namespace Siemplify.Common.ExternalChannels
                 }
                 catch (Exception ex)
                 {
-                    Log("AcquireTokenAsync Failed. Make sure your App was registered as Native on Azure Active Directory Apps:\r\n\t" + ex.Message);                    
+                    Log("AcquireTokenAsync Failed. Make sure your App was registered as Native at Azure Active Directory Apps:\r\n\t" +
+                        "https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps\r\n\t" + ex.Message);                    
                 }
             }
 
