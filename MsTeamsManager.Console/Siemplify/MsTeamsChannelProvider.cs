@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using MSTeamsManager.Helpers;
 using MSTeamsManager.Models;
 using Newtonsoft.Json.Linq;
@@ -19,6 +21,15 @@ namespace Siemplify.Common.ExternalChannels
         readonly GraphService _graphService = new GraphService();
         private string _token;
 
+        // Don't change this constant
+        // It is a constant that corresponds to fixed values in AAD that corresponds to Microsoft Graph
+        //
+        // Required Permissions - Microsoft Graph -> API
+        // Read all users' full profiles
+        // Read and write all groups
+        const string aadResourceAppId = "00000003-0000-0000-c000-000000000000";
+
+
         public string CurrentTeamId { get; set; }       // set team id before any call. Will be set on Connect() to first team.
 
         public string Token { get; private set; }
@@ -27,7 +38,12 @@ namespace Siemplify.Common.ExternalChannels
 
         public MsTeamsChannelProvider()
         {
+            _authConfig = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
 
+            // NOTE: For testing purposes on my machine
+#if DEBUG
+            if (Environment.MachineName == "PC") _authConfig = AuthenticationConfig.ReadFromJsonFile("appsettings-dk.json");
+#endif
         }
 
         #region Helper methods
@@ -84,54 +100,95 @@ namespace Siemplify.Common.ExternalChannels
         public string Provider => nameof(MsTeamsChannelProvider);
 
 
-        public async Task ConnectAsync()
+        // Connect / Login
+        AuthenticationContext _authenticationContext ;
+        AuthenticationResult _authenticationResult;
+        AuthenticationConfig _authConfig;
+
+
+        private async Task<AuthenticationResult> TryFetchTokenSilently()
         {
-            Token = CurrentTeamId = "<uncknown>";
-
-            AuthenticationConfig config = AuthenticationConfig.ReadFromJsonFile("appsettings.json");
-
-
-            // NOTE: For testing purposes on my machine
-#if DEBUG
-            if (Environment.MachineName == "PC") config = AuthenticationConfig.ReadFromJsonFile("appsettings-dk.json");
-#endif
-
-            // Even if this is a console application here, a daemon application is a confidential client application
-            ClientCredential clientCredentials;
-
-#if !VariationWithCertificateCredentials
-            clientCredentials = new ClientCredential(config.ClientSecret);
-#else
-            X509Certificate2 certificate = ReadCertificate(config.CertificateName);
-            clientCredentials = new ClientCredential(new ClientAssertionCertificate(certificate));
-#endif
-            var app = new ConfidentialClientApplication(config.ClientId, config.Authority, "https://daemon", clientCredentials, null, new TokenCache());
-
-            // With client credentials flows the scopes is ALWAYS of the shape "resource/.default", as the 
-            // application permissions need to be set statically (in the portal or by PowerShell), and then granted by
-            // a tenant administrator
-            string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-
             AuthenticationResult result = null;
+
+            // first, try to get a token silently
             try
             {
-                result = await app.AcquireTokenForClientAsync(scopes);
+                return result = await _authenticationContext.AcquireTokenSilentAsync(aadResourceAppId, _authConfig.ClientId);
             }
-            catch (MsalServiceException ex) when (ex.Message.Contains("AADSTS70011"))
+            catch (AdalException adalException)
             {
-                // Invalid scope. The scope has to be of the form "https://resourceurl/.default"
-                // Mitigation: change the scope to be as expected
-                throw;
+                // There is no token in the cache; prompt the user to sign-in.
+                if (adalException.ErrorCode == AdalError.FailedToAcquireTokenSilently
+                    || adalException.ErrorCode == AdalError.InteractionRequired)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("No token in the cache");
+                    return result;
+                }
+
+                Log("An unexpected error occurred.\r\n" + adalException);
             }
+
+            return result;
+        }
+
+        private async Task<AuthenticationResult> UserLogin()
+        {
+            Debug.Assert(_authConfig != null);
+
+            var authority = string.Format(CultureInfo.InvariantCulture, _authConfig.AadInstance, _authConfig.Tenant);
+            _authenticationContext = new AuthenticationContext(authority, new FileCache());
+            AuthenticationResult result = await TryFetchTokenSilently();
 
             if (result == null)
             {
-                Log("Unable to AcquireTokenForClientAsync");
-                return;
+                UserCredential uc = ConsoleUtils.TextualPrompt();
+
+                // if you want to use Windows integrated auth, comment the line above and uncomment the one below
+                // UserCredential uc = new UserCredential();
+                try
+                {
+                    // NOTE: that this type of auth is working for NATIVE client apps. 
+                    // Make sure your App was registered as Native, not Web on Azure Active Directory Apps.
+                    result = await _authenticationContext.AcquireTokenAsync(aadResourceAppId, _authConfig.ClientId, uc);
+                }
+                catch (Exception ex)
+                {
+                    Log("AcquireTokenAsync Failed. Make sure your App was registered as Native on Azure Active Directory Apps:\r\n\t" + ex.Message);                    
+                }
             }
 
-            _graphService.accessToken = Token = result.AccessToken;
-            CurrentTeamId = (await _graphService.GetMyTeams(Token)).FirstOrDefault()?.id;
+            return result;
+
+            // Uncomment to Login by opening Browser window:
+            //_authenticationContext.TokenCache.Clear();
+            //DeviceCodeResult deviceCodeResult = _authenticationContext.AcquireDeviceCodeAsync(aadResourceAppId, _authConfig.ClientId).Result;
+            //Log(deviceCodeResult.Message);
+            //return _authenticationContext.AcquireTokenByDeviceCodeAsync(deviceCodeResult).Result;
+        }
+
+
+        public async Task ConnectAsync()
+        {
+            Token = CurrentTeamId = "<uncknown>";
+            
+            _authenticationResult = await UserLogin();
+            if (string.IsNullOrEmpty(_authenticationResult.AccessToken))
+            {
+                Log("Login failed. Token is empty.");
+                return;
+            }
+            else            
+                Log("You've successfully signed in as " + _authenticationResult.UserInfo.DisplayableId);
+
+            Token = _graphService.accessToken = _authenticationResult.AccessToken;
+            
+            // select first team
+            var teams = await _graphService.GetMyTeams(Token);
+            CurrentTeamId = teams.FirstOrDefault()?.id;
+
+            if (CurrentTeamId == null)
+                Log("Warning: no teams found for current user. CurrentTeamId is null.");
         }
 
 

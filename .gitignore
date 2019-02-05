@@ -329,3 +329,4 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 MsTeamsManager/appsettings.testdk.json
+MsTeamsManager.Console/appsettings-dk-machine.json

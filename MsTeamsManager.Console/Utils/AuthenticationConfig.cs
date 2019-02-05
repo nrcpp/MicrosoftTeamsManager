@@ -39,6 +39,8 @@ namespace Siemplify.Common.ExternalChannels.Utils
             }
         }
 
+        public string AadInstance => "https://login.microsoftonline.com/{0}";
+
 #if !VariationWithCertificateCredentials
         /// <summary>
         /// Client secret (application password)

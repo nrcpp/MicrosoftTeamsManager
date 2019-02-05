@@ -35,6 +35,9 @@
     <Reference Include="Microsoft.Identity.Client, Version=2.7.0.0, Culture=neutral, PublicKeyToken=0a613f4dd989e8ae, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Identity.Client.2.7.0\lib\net45\Microsoft.Identity.Client.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IdentityModel.Clients.ActiveDirectory, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Clients.ActiveDirectory.4.5.0\lib\net45\Microsoft.IdentityModel.Clients.ActiveDirectory.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -43,6 +46,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -55,9 +59,7 @@
     <Compile Include="Helpers\GraphService.cs" />
     <Compile Include="Helpers\HtmlHelpers.cs" />
     <Compile Include="Helpers\ServiceHelper.cs" />
-    <Compile Include="InternalModels\AppList.cs" />
     <Compile Include="InternalModels\Channel.cs" />
-    <Compile Include="InternalModels\Clone.cs" />
     <Compile Include="InternalModels\Group.cs" />
     <Compile Include="InternalModels\HistoryMessage.cs" />
     <Compile Include="InternalModels\Member.cs" />
@@ -71,6 +73,8 @@
     <Compile Include="InternalModels\TeamMemberSettings.cs" />
     <Compile Include="InternalModels\TeamMessagingSettings.cs" />
     <Compile Include="InternalModels\TeamsApp.cs" />
+    <Compile Include="Utils\ConsoleUtils.cs" />
+    <Compile Include="Utils\FileCache.cs" />
     <Compile Include="Utils\ProtectedApiCallHelper.cs" />
     <Compile Include="Siemplify\Models\ChannelMessage.cs" />
     <Compile Include="Siemplify\Models\ChannelUser.cs" />
