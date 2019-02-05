@@ -4,7 +4,7 @@
 
 ***MsTeamsManager.Console*** project was added to solution which demonstrates *MSTeamsManager* class functionality in native applications.
 Before start using it you need to grant permissions for MsManager.Console application on [your Azure AD apps page](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps).
-I've used test@siemplifygmail.onmicrosoft.com account to create Azure AD App.
+
 Note that on the first run application requires your MS login/password to obtain token. Next times it will read it from cache file.
 There is also ability to login and obtain token through web-browser (see MSTeamsManager.UserLogin()).
 
