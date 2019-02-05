@@ -1,5 +1,17 @@
 # MsTeamsChannelProvider Readme
 
+## Update from 05th Feb. 2019
+
+***MsTeamsManager.Console*** project was added to solution which demonstrates *MSTeamsManager* class functionality in native applications.
+Before start using it you need to grant permissions for MsManager.Console application on [your Azure AD apps page](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps).
+I've used test@siemplifygmail.onmicrosoft.com account to create Azure AD App.
+Note that on the first run application requires your MS login/password to obtain token. Next times it will read it from cache file.
+There is also ability to login and obtain token through web-browser (see MSTeamsManager.UserLogin()).
+
+Also I've added alias methods to *IExternalChannelProvider* interace to manage teams. Such as GetTeamUsers, AddUserToTeam, RemoveUserFromTeam which is equal to GetChannelUsers, AddUserToChannel and RemoveUserFromChannel.
+See Program.cs for example of usage *MSTeamsManager* synchronous methods.
+
+
 ## General notes:
 - The main class that implements IExternalChannelProvider is **MsTeamsChannelProvider**. It is in *_Siemplify* folder inside GraphApi.Web project.
 - MsTeamsChannelProvider also implements *IExternalChannelProviderAsync* interface that duplicates methods from IExternalChannelProvider with Async postfix. You could remove synchronous methods from class if not needed.
