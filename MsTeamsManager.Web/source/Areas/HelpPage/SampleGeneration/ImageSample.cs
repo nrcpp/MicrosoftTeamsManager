@@ -1,6 +1,6 @@
 using System;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage
+namespace MSTeamsManager.Areas.HelpPage
 {
     /// <summary>
     /// This represents an image sample on the help page. There's a display template named ImageSample associated with this class.

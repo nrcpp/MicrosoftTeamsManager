@@ -10,12 +10,12 @@ using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
 using System.Configuration;
 using System.Threading.Tasks;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.SessionToken;
+using MSTeamsManager.SessionToken;
 using System.IdentityModel.Tokens;
 using System.IdentityModel.Claims;
 using Microsoft.Identity.Client;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect
+namespace MSTeamsManager
 {
     public partial class Startup
     {

@@ -10,7 +10,7 @@ using System.Web.Routing;
 using System.Web.Security;
 using System.Web.SessionState;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect
+namespace MSTeamsManager
 {
     public class WebApiApplication : System.Web.HttpApplication
     {

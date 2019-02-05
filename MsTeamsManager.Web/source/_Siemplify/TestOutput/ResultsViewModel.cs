@@ -11,7 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web.Mvc;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
+namespace MSTeamsManager.Models
 {
     // View model to display a collection of one or more entities returned from the Microsoft Graph. 
     public class ResultsViewModel

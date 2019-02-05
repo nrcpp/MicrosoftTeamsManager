@@ -4,7 +4,7 @@
 */
 using System.Threading.Tasks;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Auth
+namespace MSTeamsManager.Auth
 {
     public interface IAuthProvider
     {

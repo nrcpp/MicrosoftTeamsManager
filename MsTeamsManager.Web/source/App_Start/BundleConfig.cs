@@ -1,7 +1,7 @@
 ﻿using System.Web;
 using System.Web.Optimization;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect
+namespace MSTeamsManager
 {
     public class BundleConfig
     {

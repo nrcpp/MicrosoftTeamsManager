@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Web.Http.Controllers;
 using System.Web.Http.Description;
 using System.Xml.XPath;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions;
+using MSTeamsManager.Areas.HelpPage.ModelDescriptions;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage
+namespace MSTeamsManager.Areas.HelpPage
 {
     /// <summary>
     /// A custom <see cref="IDocumentationProvider"/> that reads the API documentation from an XML documentation file.

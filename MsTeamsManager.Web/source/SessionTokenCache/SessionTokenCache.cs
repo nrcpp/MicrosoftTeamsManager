@@ -6,7 +6,7 @@
 using System.Web;
 using Microsoft.Identity.Client;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.SessionToken
+namespace MSTeamsManager.SessionToken
 {
 
     // Store the user's token information.

@@ -8,11 +8,11 @@ using System.Web.Mvc;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.SessionToken;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Auth;
+using MSTeamsManager.SessionToken;
+using MSTeamsManager.Auth;
 using System.Security.Claims;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Controllers
+namespace MSTeamsManager.Controllers
 {
     public class AccountController : Controller
     {

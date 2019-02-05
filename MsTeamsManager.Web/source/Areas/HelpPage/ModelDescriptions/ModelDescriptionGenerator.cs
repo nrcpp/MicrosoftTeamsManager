@@ -11,7 +11,7 @@ using System.Web.Http.Description;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions
+namespace MSTeamsManager.Areas.HelpPage.ModelDescriptions
 {
     /// <summary>
     /// Generates model descriptions for given types.

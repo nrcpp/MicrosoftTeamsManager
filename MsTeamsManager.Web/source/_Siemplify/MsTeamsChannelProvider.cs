@@ -6,9 +6,9 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Auth;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Models;
+using MSTeamsManager.Auth;
+using MSTeamsManager.Helpers;
+using MSTeamsManager.Models;
 using Siemplify.Common.ExternalChannels.DataModel;
 using Siemplify.Common.ExternalChannels.Utils;
 

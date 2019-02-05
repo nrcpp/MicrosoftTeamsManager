@@ -5,13 +5,13 @@
 
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Auth;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Models;
+using MSTeamsManager.Auth;
+using MSTeamsManager.Models;
 using Resources;
 using System;
 
 using System.Net.Http;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles;
+using MSTeamsManager.Helpers;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Configuration;

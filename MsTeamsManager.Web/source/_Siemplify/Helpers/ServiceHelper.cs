@@ -1,5 +1,5 @@
 ﻿
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Models;
+using MSTeamsManager.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -11,7 +11,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
+namespace MSTeamsManager.Helpers
 {
     public class ServiceHelper
     {

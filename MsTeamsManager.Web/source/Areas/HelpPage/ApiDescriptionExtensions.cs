@@ -3,7 +3,7 @@ using System.Text;
 using System.Web;
 using System.Web.Http.Description;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage
+namespace MSTeamsManager.Areas.HelpPage
 {
     public static class ApiDescriptionExtensions
     {

@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Web.Http.Description;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions;
+using MSTeamsManager.Areas.HelpPage.ModelDescriptions;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.Models
+namespace MSTeamsManager.Areas.HelpPage.Models
 {
     /// <summary>
     /// The model that represents an API displayed on the help page.

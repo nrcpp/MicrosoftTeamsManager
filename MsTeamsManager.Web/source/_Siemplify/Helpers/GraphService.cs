@@ -5,12 +5,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Models;
+using MSTeamsManager.Models;
 using Newtonsoft.Json;
 using Resources;
 using System.Configuration;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles
+namespace MSTeamsManager.Helpers
 {
     public static class Statics
     {

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions
+namespace MSTeamsManager.Areas.HelpPage.ModelDescriptions
 {
     internal static class ModelNameHelper
     {

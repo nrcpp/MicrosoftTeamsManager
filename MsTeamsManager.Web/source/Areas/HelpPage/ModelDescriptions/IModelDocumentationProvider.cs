@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions
+namespace MSTeamsManager.Areas.HelpPage.ModelDescriptions
 {
     public interface IModelDocumentationProvider
     {

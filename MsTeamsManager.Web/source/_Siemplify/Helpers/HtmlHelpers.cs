@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Models
+namespace MSTeamsManager.Models
 {
     public static class Statics
     {

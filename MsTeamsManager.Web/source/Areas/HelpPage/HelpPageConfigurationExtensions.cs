@@ -11,10 +11,10 @@ using System.Net.Http.Headers;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Description;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.Models;
+using MSTeamsManager.Areas.HelpPage.ModelDescriptions;
+using MSTeamsManager.Areas.HelpPage.Models;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage
+namespace MSTeamsManager.Areas.HelpPage
 {
     public static class HelpPageConfigurationExtensions
     {

@@ -1,7 +1,7 @@
 using System.Web.Http;
 using System.Web.Mvc;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage
+namespace MSTeamsManager.Areas.HelpPage
 {
     public class HelpPageAreaRegistration : AreaRegistration
     {

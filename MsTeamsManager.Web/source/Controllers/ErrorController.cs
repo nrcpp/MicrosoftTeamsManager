@@ -5,7 +5,7 @@
 
 using System.Web.Mvc;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Controllers
+namespace MSTeamsManager.Controllers
 {
     public class ErrorController : Controller
     {

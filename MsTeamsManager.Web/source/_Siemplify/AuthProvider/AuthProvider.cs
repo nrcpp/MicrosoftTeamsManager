@@ -6,16 +6,16 @@
 using Microsoft.Identity.Client;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.OpenIdConnect;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.SessionToken;
+using MSTeamsManager.SessionToken;
 using System;
 using System.Configuration;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using Resources;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.ImportantFiles;
+using MSTeamsManager.Helpers;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Auth
+namespace MSTeamsManager.Auth
 {
     public sealed class AuthProvider : IAuthProvider
     {

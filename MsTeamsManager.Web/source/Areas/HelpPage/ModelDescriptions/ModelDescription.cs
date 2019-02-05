@@ -1,6 +1,6 @@
 using System;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions
+namespace MSTeamsManager.Areas.HelpPage.ModelDescriptions
 {
     /// <summary>
     /// Describes a type model.

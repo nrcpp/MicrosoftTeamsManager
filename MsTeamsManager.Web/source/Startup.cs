@@ -4,9 +4,9 @@ using System.Linq;
 using Microsoft.Owin;
 using Owin;
 
-[assembly: OwinStartup(typeof(Microsoft_Teams_Graph_RESTAPIs_Connect.Startup))]
+[assembly: OwinStartup(typeof(MSTeamsManager.Startup))]
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect
+namespace MSTeamsManager
 {
     public partial class Startup
     {

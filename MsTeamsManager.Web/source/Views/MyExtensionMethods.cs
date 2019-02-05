@@ -6,7 +6,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Views
+namespace MSTeamsManager.Views
 {
     public static class MyExtensionMethods
     {

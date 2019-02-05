@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect
+namespace MSTeamsManager
 {
     public class RouteConfig
     {

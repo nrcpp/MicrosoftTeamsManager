@@ -1,10 +1,10 @@
 using System;
 using System.Web.Http;
 using System.Web.Mvc;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.ModelDescriptions;
-using Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.Models;
+using MSTeamsManager.Areas.HelpPage.ModelDescriptions;
+using MSTeamsManager.Areas.HelpPage.Models;
 
-namespace Microsoft_Teams_Graph_RESTAPIs_Connect.Areas.HelpPage.Controllers
+namespace MSTeamsManager.Areas.HelpPage.Controllers
 {
     /// <summary>
     /// The controller that will handle requests for the help page.
